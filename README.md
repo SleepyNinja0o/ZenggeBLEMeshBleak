@@ -4,8 +4,8 @@ Ported Google's python-dimond library from bluepy to Bleak for use with Zengee B
 
 Requirements
 ------------
-bleak<br/>
-pycryptodome<br/>
+bleak<br />
+pycryptodome<br />
 
 Example use
 -----------
