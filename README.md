@@ -14,9 +14,9 @@ You will need to pull the encryption keys from the ZGMeshDB database on your pho
 On a rooted Android device, the ZGMeshDB database file can be found here:<br/>
 /data/data/com.zengge.telinkmeshlight/databases/ZGMeshDB<br/>
 
-I believe there is a way to pair and generate encryption keys from your computer to bypass the above. I am looking into this<br/>
+I believe there is a way to pair and generate encryption keys from your computer to bypass the above. I am looking into this.<br/>
 
-I have included the location of the values you need in the example below in the following format:<br/>
+I have included the DB location of the device/mesh values you need in the example below in the following format:<br/>
 (DB Table - DB Column)<br/>
 
 Example use
