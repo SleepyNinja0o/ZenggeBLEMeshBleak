@@ -35,7 +35,7 @@ deviceID = 0x03       #(MeshDevice - meshAddress)<br/>
 deviceType = 0x41     #(MeshDevice - deviceType)<br/>
 
 mesh = Zengge_Bleak.ZenggeMesh(vendorID, deviceMAC, meshName, meshPass)<br/>
-device = Zengge_Bleak.ZenggeLight(deviceName,0x03,deviceMAC,0x41,mesh)<br/>
+device = Zengge_Bleak.ZenggeLight(deviceName,deviceID,deviceMAC,deviceType,mesh)<br/>
 
 async def execute():<br/>
     await mesh.connect()<br/>
