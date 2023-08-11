@@ -21,28 +21,30 @@ I have included the DB location of the device/mesh values you need in the exampl
 
 Example use
 -----------
-import Zengge_Bleak<br/>
-import asyncio<br/>
-import time<br/>
+```python
+import Zengge_Bleak
+import asyncio
+import time
 
-vendorID = 0x0211 #(MeshDevice - meshUUID)<br/>
-meshName = "q31k125n759z2fkn" #(MeshPlace - meshKey)<br/>
-meshPass = "4rie6o2dl56fz2ui" #(MeshPlace - meshPassword)<br/>
-<br/>
-deviceMAC = "08:65:F0:05:24:42"    #(MeshDevice - macAddress)<br/>
-deviceName = "Light1" #This is not required<br/>
-deviceID = 0x03       #(MeshDevice - meshAddress)<br/>
-deviceType = 0x41     #(MeshDevice - deviceType)<br/>
+vendorID = 0x0211 #(MeshDevice - meshUUID)
+meshName = "q31k125n759z2fkn" #(MeshPlace - meshKey)
+meshPass = "4rie6o2dl56fz2ui" #(MeshPlace - meshPassword)
 
-mesh = Zengge_Bleak.ZenggeMesh(vendorID, deviceMAC, meshName, meshPass)<br/>
-device = Zengge_Bleak.ZenggeLight(deviceName,deviceID,deviceMAC,deviceType,mesh)<br/>
+deviceMAC = "08:65:F0:05:24:42"    #(MeshDevice - macAddress)
+deviceName = "Light1" #This is not required
+deviceID = 0x03       #(MeshDevice - meshAddress)
+deviceType = 0x41     #(MeshDevice - deviceType)
 
-async def execute():<br/>
-    await mesh.connect()<br/>
-    await device.light_on()<br/>
-    await device.light_RGB(255,0,0)<br/>
-    time.sleep(3)<br/>
-    await device.light_off()<br/>
-    await mesh.disconnect()<br/>
+mesh = Zengge_Bleak.ZenggeMesh(vendorID, deviceMAC, meshName, meshPass)
+device = Zengge_Bleak.ZenggeLight(deviceName,deviceID,deviceMAC,deviceType,mesh)
 
-asyncio.run(execute())<br/>
+async def execute():
+    await mesh.connect()
+    await device.light_on()
+    await device.light_RGB(255,0,0)
+    time.sleep(3)
+    await device.light_off()
+    await mesh.disconnect()
+
+asyncio.run(execute())
+```
