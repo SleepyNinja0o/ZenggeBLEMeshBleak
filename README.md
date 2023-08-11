@@ -19,8 +19,8 @@ I believe there is a way to pair and generate encryption keys from your computer
 I have included the DB location of the device/mesh values you need in the example below in the following format:<br/>
 (DB Table - DB Column)<br/>
 
-Example use
------------
+Example use - Windows
+----------------------
 ```
 import Zengge_Bleak
 import asyncio
