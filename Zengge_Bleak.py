@@ -154,7 +154,7 @@ class ZenggeMesh:
                 print("Mesh login success!")
             self.is_connected = True
         except Exception as e:
-            print(f"Connection to {device.mac} failed!\nError: {e}")
+            print(f"Connection to {self.mac} failed!\nError: {e}")
             self.is_connected = False
             self.client = None
             self.sk = None
