@@ -9,6 +9,12 @@ cryptography<br/>
 requests <br/>
 django<br/>
 bleak<br/>
+<br/>
+<br/>
+Install via PowerShell using:<br/>
+```
+("pycryptodome","cryptography","requests","django","bleak") | foreach {pip install $_}
+```
 
 Zengge App Database (ZGMeshDB)
 -----------
