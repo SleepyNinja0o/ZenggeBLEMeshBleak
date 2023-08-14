@@ -67,9 +67,9 @@ Zengge_Bleak.HaoDeng_SetCountryServer("US")
 Zengge_Bleak.HaoDeng_Login("usernameHere", "passwordHere")
 
 zenggeMesh = Zengge_Bleak.HaoDeng_GetMesh()
-Zengge_Bleak.HaoDeng_ListMesh()
+Zengge_Bleak.HaoDeng_ListMesh(zenggeMesh)
 zenggeMeshDevices = Zengge_Bleak.HaoDeng_GetMeshDevices(zenggeMesh[0]['placeUniID'])
-Zengge_Bleak.HaoDeng_ListMeshDevices()
+Zengge_Bleak.HaoDeng_ListMeshDevices(zenggeMeshDevices)
 ```
 
 Current issues
