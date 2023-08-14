@@ -57,7 +57,7 @@ import Zengge_Bleak
 Zengge_Bleak.HaoDeng_SetCountryServer("US")
 Zengge_Bleak.HaoDeng_Login("usernameHere", "passwordHere")
 zenggeMesh = Zengge_Bleak.HaoDeng_GetMesh()
-zenggeMesh
+print("\n" + zenggeMesh)
 ```
 
 Current issues
