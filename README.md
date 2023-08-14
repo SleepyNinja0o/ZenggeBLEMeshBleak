@@ -26,17 +26,18 @@ import Zengge_Bleak
 import asyncio
 import time
 
-vendorID = 0x0211                 #(MeshDevice - meshUUID)
+meshID = 0x0211                   #(MeshDevice - meshUUID)
 meshName = "q31k125n759z2fkn"     #(MeshPlace - meshKey)
 meshPass = "4rie6o2dl56fz2ui"     #(MeshPlace - meshPassword)
+meshLTK = "83dd4d4630f5h57g"      #This is not required
 
-deviceMAC = "08:65:F0:05:24:42"   #(MeshDevice - macAddress)
+deviceMAC = "08:65:F0:05:25:65"   #(MeshDevice - macAddress)
 deviceName = "Light1"             #This is not required
-deviceID = 0x03                   #(MeshDevice - meshAddress)
+deviceID = 0x05                   #(MeshDevice - meshAddress)
 deviceType = 0x41                 #(MeshDevice - deviceType)
 
-mesh = Zengge_Bleak.ZenggeMesh(vendorID, deviceMAC, meshName, meshPass)
-device = Zengge_Bleak.ZenggeLight(deviceName,deviceID,deviceMAC,deviceType,mesh)
+mesh = Zengge_Bleak.ZenggeMesh(deviceMAC, meshID, meshName, meshPass, meshLTK)
+device = Zengge_Bleak.ZenggeLight("Light1",0,deviceID,deviceMAC,deviceType,0,0,0,0,mesh)
 
 async def execute():
     await mesh.connect()
