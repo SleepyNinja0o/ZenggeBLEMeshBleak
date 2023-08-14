@@ -4,10 +4,10 @@ Ported Google's python-dimond library from bluepy to Bleak for use with Zengee B
 
 Requirements
 ------------
-pycryptodome
-cryptography
-django
-bleak
+pycryptodome<br/>
+cryptography<br/>
+django<br/>
+bleak<br/>
 
 Zengge App Database (ZGMeshDB)
 -----------
