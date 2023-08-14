@@ -253,6 +253,34 @@ def HaoDeng_GetMeshDevices(placeUniID):
         print("Login session not detected! Please login first using HaoDeng_Login method.")
 
 
+def HaoDeng_ListMesh(zenggeMesh):
+    for mesh in zenggeMesh:
+        print("DisplayName: "+mesh['displayName'])
+        print("PlaceUniID: "+mesh['placeUniID'])
+        print("UserID: "+mesh['userID'])
+        print("AccessType: "+str(mesh['accessType']))
+        print("MeshKey: "+mesh['meshKey'])
+        print("MeshPassword: "+mesh['meshPassword'])
+        print("MeshLTK: "+mesh['meshLTK'])
+        print("LastUpdateDate: "+mesh['lastUpdateDate'])
+        print("MaxMeshAddress: "+str(mesh['maxMeshAddress']))
+        print("MaxGroupID: "+str(mesh['maxGroupID']))
+        print("\n")
+
+
+def HaoDeng_ListMeshDevices(zenggeMeshDevices):
+    for device in zenggeMeshDevices:
+        print("DisplayName: "+device['displayName'])
+        print("MACAddress: "+device['macAddress'])
+        print("PlaceUniID: "+device['placeUniID'])
+        print("MeshAddress: "+str(device['meshAddress']))
+        print("MeshUUID: "+str(device['meshUUID']))
+        print("DeviceType: "+str(device['deviceType']))
+        print("WiringType: "+str(device['wiringType']))
+        print("LastUpdateDate: "+device['lastUpdateDate'])
+        print("\n")
+
+
 class ZenggeMesh:
     def __init__(self, mac, meshID, meshName="ZenggeMesh", meshPass="ZenggeTechnology", meshLTK=None):
         self.packet_count = random.randrange(0xffff)
