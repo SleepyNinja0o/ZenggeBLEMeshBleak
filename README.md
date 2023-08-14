@@ -6,6 +6,7 @@ Requirements
 ------------
 pycryptodome<br/>
 cryptography<br/>
+requests <br/>
 django<br/>
 bleak<br/>
 
