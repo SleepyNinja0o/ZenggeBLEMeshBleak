@@ -1,8 +1,24 @@
-#The Telink encryption functions used in this project were pulled from Google's python-dimond project here:  https://github.com/google/python-dimond. Many thanks to mjg59!
-
+'''
+The Telink encryption functions used in this project were pulled from Google's python-dimond project
+    https://github.com/google/python-dimond
+Code for changing Mesh Name and Password using factory settings was pulled from home-assistant-awox project
+    https://github.com/fsaris/home-assistant-awox
+'''
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+from django.utils.encoding import force_bytes, force_str
 from bleak import BleakClient
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
+from os import urandom
+import base64
+import binascii
+import hashlib
+import urllib
+import packetutils as pckt
+import requests
+import json
 import random
 import time
 import asyncio
@@ -37,6 +53,17 @@ UUID_Service = "00010203-0405-0607-0809-0a0b0c0d1910"
 UUID_Control = "00010203-0405-0607-0809-0a0b0c0d1912"
 UUID_Notify = "00010203-0405-0607-0809-0a0b0c0d1911"
 UUID_Pairing = "00010203-0405-0607-0809-0a0b0c0d1914"
+
+global magichue_countryservers,magichue_usertoken,magichue_devicesecret,magichue_userid,magichue_getmeshendpoint
+magichue_countryservers = [{'nationName': 'Australian', 'nationCode': 'AU', 'serverApi': 'oameshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'oa.meshbroker.magichue.net'}, {'nationName': 'Avalon', 'nationCode': 'AL', 'serverApi': 'ttmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'tt.meshbroker.magichue.net'}, {'nationName': 'China', 'nationCode': 'CN', 'serverApi': 'cnmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'cn.meshbroker.magichue.net'}, {'nationName': 'England', 'nationCode': 'GB', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Espana', 'nationCode': 'ES', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'France', 'nationCode': 'FR', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Germany', 'nationCode': 'DE', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Italy', 'nationCode': 'IT', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Japan', 'nationCode': 'JP', 'serverApi': 'dymeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'dy.meshbroker.magichue.net'}, {'nationName': 'Russia', 'nationCode': 'RU', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}]
+magichue_countryserver = magichue_countryservers[10]['serverApi']
+magichue_connecturl = "http://" + magichue_countryserver
+magichue_nationdataendpoint = "apixp/MeshData/loadNationDataNew/ZG?language=en"
+magichue_userloginendpoint = "apixp/User001/LoginForUser/ZG"
+magichue_getmeshendpoint = 'apixp/MeshData/GetMyMeshPlaceItems/ZG?userId='
+magichue_usertoken = None
+magichue_devicesecret = None
+magichue_userid = None
 
 def encrypt(key, data):
     k = AES.new(bytes(reversed(key)), AES.MODE_ECB)
@@ -88,20 +115,130 @@ def decrypt_packet(sk, address, packet):
     return packet
 
 
+def HaoDeng_SetCountryServer(countryCode=None): #{'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}
+    global magichue_countryservers,magichue_nationdataendpoint,magichue_connecturl
+    magichue_countryserver = magichue_countryservers[10]['serverApi'] #Default to USA server for pulling country list
+    magichue_connecturl = "http://" + magichue_countryserver + magichue_nationdataendpoint
+    headers = {
+        'User-Agent': 'HaoDeng/1.5.7(ANDROID,10,en-US)',
+        'Accept-Language': 'en-US',
+        'Accept': 'application/json',
+        'token': '',
+        'Accept-Encoding': 'gzip'
+    }
+    response = requests.get(magichue_connecturl, headers=headers)
+    magichue_connecturl = None
+    if response.status_code != 200:
+        print('Failed to download Servers list - %s' % response.json()['error'])
+        print('Defaulting to offline server data....\n')
+        responseJSON = magichue_countryservers
+        i = 0
+        for nation in responseJSON:
+            print (str(i) + ": " + nation['nationName'] + " - " + nation['serverApi'])
+            i+=1
+        country = int(input("Select Country for Server:"))
+        magichue_connecturl = "http://" + magichue_countryservers[country]['serverApi']
+        print("The default server has been set to " + magichue_countryservers[country]['nationCode'])
+    else:
+        print('Successfully downloaded Servers list!\n')
+        responseJSON = response.json()['result']
+        responseJSON.sort(key=lambda x: x["nationName"])
+        magichue_countryservers = responseJSON
+        if countryCode is None:
+            i = 0
+            for nation in responseJSON:
+                print (str(i) + ": " + nation['nationName'] + " - " + nation['serverApi'])
+                i+=1
+            country = int(input("Select Country for Server:"))
+            magichue_connecturl = "http://" + responseJSON[country]['serverApi']
+            print("The default Hao Deng server has been set to " + responseJSON[country]['nationCode'] + " - " + magichue_connecturl)
+        else:
+            for nation in responseJSON:
+                if nation['nationCode'] == upper(countryCode):
+                    magichue_connecturl = "http://" + nation['serverApi']
+                    print("The default server has been set to: " + upper(countryCode) + " - " + magichue_connecturl)
+            if magichue_connecturl is None:
+                print("HaoDeng server was not found for " + upper(countryCode) + "\nDefaulting to US server...")
+                magichue_connecturl = "http://" + magichue_countryservers[10]['serverApi']
+
+
+def GenerateTimestampCheckCode():
+    SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
+    timestamp = str(int(time.time()*1000))
+    value = force_bytes("ZG" + timestamp)
+    backend = default_backend()
+    key = force_bytes(SECRET_KEY)
+    encryptor = Cipher(algorithms.AES(key), modes.ECB(), backend).encryptor()
+    padder = padding.PKCS7(algorithms.AES(key).block_size).padder()
+    padded_data = padder.update(value) + padder.finalize()
+    encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
+    checkcode = binascii.hexlify(encrypted_text).decode()
+    return timestamp,checkcode
+
+
+def HaoDeng_Login(username, password):
+    global magichue_usertoken,magichue_userid,magichue_devicesecret,magichue_connecturl,magichue_userloginendpoint
+    timestampcheckcode = GenerateTimestampCheckCode()
+    timestamp = timestampcheckcode[0]
+    checkcode = timestampcheckcode[1]
+    md5pass = hashlib.md5(password.encode()).hexdigest()
+    payload = dict(userID=username, password=md5pass, appSys='Android', timestamp=timestamp, appVer='', checkcode=checkcode)
+    headers = {
+        'User-Agent': 'HaoDeng/1.5.7(ANDROID,10,en-US)',
+        'Accept-Language': 'en-US',
+        'Accept': 'application/json',
+        'token': '',
+        'Content-Type': 'application/json',
+        'Accept-Encoding': 'gzip'
+    }
+    response = requests.post(magichue_connecturl + magichue_userloginendpoint, headers=headers, json=payload)
+    if response.status_code != 200:
+        print('Login failure! - %s' % response.json()['error'])
+    else:
+        print('Login successful!')
+        responseJSON = response.json()['result']
+        magichue_userid = responseJSON['userId']
+        magichue_usertoken = responseJSON['auth_token']
+        magichue_devicesecret = responseJSON['deviceSecret']
+
+
+def HaoDeng_GetMesh():
+    global magichue_connecturl,magichue_getmeshendpoint,magichue_userid,magichue_usertoken
+    if magichue_usertoken is not None:
+        headers = {
+            'User-Agent': 'HaoDeng/1.5.7(ANDROID,10,en-US)',
+            'Accept-Language': 'en-US',
+            'Accept': 'application/json',
+            'token': magichue_usertoken,
+            'Content-Type': 'application/json',
+            'Accept-Encoding': 'gzip'
+        }
+        response = requests.get(magichue_connecturl + magichue_getmeshendpoint + urllib.parse.quote_plus(magichue_userid), headers=headers)
+        if response.status_code != 200:
+            print('Get Mesh Settings web request failed! - %s' % response.json()['error'])
+        else:
+            print('Mesh settings retrieved successfully!')
+            responseJSON = response.json()['result']
+            return responseJSON
+    else:
+        print("Login session not detected! Please login first using HaoDeng_Login method.")
+
+
 class ZenggeMesh:
-    def __init__(self, vendor, mac, meshName, meshPass):
+    def __init__(self, mac, meshID, meshName="ZenggeMesh", meshPass="ZenggeTechnology", meshLTK=None):
         self.packet_count = random.randrange(0xffff)
         self.mac = mac
         self.macarray = mac.split(':')
         self.macdata = [int(self.macarray[5], 16), int(self.macarray[4], 16), int(self.macarray[3], 16), int(self.macarray[2], 16), int(self.macarray[1], 16), int(self.macarray[0], 16)]
-        self.vendor = vendor
+        self.meshID = meshID
         self.meshName = meshName
         self.meshPass = meshPass
+        self.meshLTK = meshLTK
         self.client = None
         self.sk = None
         self.devices = []
         self.is_connected = False
-    async def mesh_login(self):
+    async def mesh_login_OLD(self):
         if self.client == None:
             return
         data = [0] * 16
@@ -116,6 +253,15 @@ class ZenggeMesh:
         await asyncio.sleep(0.3)
         data2 = await self.client.read_gatt_char(UUID_Pairing)
         self.sk = generate_sk(self.meshName, self.meshPass, data[0:8], data2[1:9])
+    async def mesh_login(self):
+        if self.client == None:
+            return
+        session_random = urandom(8)
+        message = pckt.make_pair_packet(self.meshName.encode(), self.meshPass.encode(), session_random)
+        pairReply = await self.client.write_gatt_char(UUID_Pairing, bytes(message), True)
+        await asyncio.sleep(0.3)
+        reply = await self.client.read_gatt_char(UUID_Pairing)
+        self.sk = pckt.make_session_key(self.meshName.encode(), self.meshPass.encode(), session_random, reply[1:9])
     async def send_packet(self, target, command, data):
         packet = [0] * 20
         packet[0] = self.packet_count & 0xff
@@ -123,11 +269,13 @@ class ZenggeMesh:
         packet[5] = target & 0xff
         packet[6] = (target >> 8) & 0xff
         packet[7] = command
-        packet[8] = self.vendor & 0xff
-        packet[9] = (self.vendor >> 8) & 0xff
+        packet[8] = self.meshID & 0xff
+        packet[9] = (self.meshID >> 8) & 0xff
         for i in range(len(data)):
             packet[10 + i] = data[i]
         enc_packet = encrypt_packet(self.sk, self.macdata, packet)
+        bytes(enc_packet)
+        print(bytes(enc_packet))
         self.packet_count += 1
         if self.packet_count > 65535:
             self.packet_count = 1
@@ -142,6 +290,36 @@ class ZenggeMesh:
                 break
             except:
                 self.connect()
+    async def send_packet_OLD(self, command, data, dest=None, withResponse=True, attempt=0):
+        """
+        Args:
+            command: The command, as a number.
+            data: The parameters for the command, as bytes.
+            dest: The destination mesh id, as a number. If None, this lightbulb's
+                mesh id will be used.
+        """
+        assert (self.sk)
+        if dest == None: dest = self.meshID
+        packet = pckt.make_command_packet(self.sk, self.mac, dest, command, data)
+        print(packet)
+        packet
+        try:
+            #logger.info(f'[{self.mesh_name.decode()}][{self.mac}] Writing command {command} data {repr(data)}')
+            await self.client.write_gatt_char(UUID_Control, packet)
+            #self.btdevice.char_write(uuid=COMMAND_CHAR_UUID, value=packet, wait_for_response=withResponse)
+            return True
+        except (NotConnectedError, NotificationTimeout) as err:
+            #logger.warning(f'[{self.mesh_name.decode()}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
+            if attempt < 3:
+                self.connect()
+                return self.send_packet(command, data, dest, withResponse, attempt+1)
+            else:
+                self.sk = None
+                raise err
+        except Exception as err:
+            #logger.exception(f'[{self.mesh_name.decode()}][{self.mac}] Command failed, device is disconnected: [{type(err).__name__}] {err}', err)
+            self.sk = None
+            raise err
     async def connect(self):
         try:
             self.client = BleakClient(self.mac)
@@ -161,6 +339,46 @@ class ZenggeMesh:
             pass
         if self.client is None or self.sk is None:
             raise Exception(f"Unable to connect to mesh {self.meshName} via {self.mac}")
+    async def setMesh(self, new_mesh_name, new_mesh_password, new_mesh_long_term_key):
+        """
+        Sets or changes the mesh network settings.
+
+        Args :
+            new_mesh_name: The new mesh name as a string, 16 bytes max.
+            new_mesh_password: The new mesh password as a string, 16 bytes max.
+            new_mesh_long_term_key: The new long term key as a string, 16 bytes max.
+
+        Returns :
+            True on success.
+        """
+        assert (self.sk), "Not connected"
+        assert len(new_mesh_name.encode()) <= 16, "new_mesh_name can hold max 16 bytes"
+        assert len(new_mesh_password.encode()) <= 16, "new_mesh_password can hold max 16 bytes"
+        assert len(new_mesh_long_term_key.encode()) <= 16, "new_mesh_long_term_key can hold max 16 bytes"
+        if self.sk is None:
+            print("BLE device is not connected!")
+            self.mac = input('Please enter MAC of device:')
+            connect()
+        message = pckt.encrypt(self.sk, new_mesh_name.encode())
+        message.insert(0, 0x4)
+        await self.client.write_gatt_char(UUID_Pairing, message)
+        message = pckt.encrypt(self.sk, new_mesh_password.encode())
+        message.insert(0, 0x5)
+        await self.client.write_gatt_char(UUID_Pairing, message)
+        message = pckt.encrypt(self.sk, new_mesh_long_term_key.encode())
+        message.insert(0, 0x6)
+        await self.client.write_gatt_char(UUID_Pairing, message)
+        time.sleep(1)
+        reply = bytearray(await self.client.read_gatt_char(UUID_Pairing))
+        if reply[0] == 0x7:
+            self.meshName = new_mesh_name
+            self.meshPass = new_mesh_password
+            #print(f'[{self.meshName}][{self.mac}] Mesh network settings accepted.')
+            print(f'[{self.meshName}]-[{self.meshPass}]-[{self.mac}] Mesh network settings accepted.')
+            return True
+        else:
+            print(f'[{self.meshName}][{self.mac}] Mesh network settings change failed : {repr(reply)}')
+            return False
     async def disconnect(self):
         self.is_connected = False
         self.sk = None
@@ -169,12 +387,21 @@ class ZenggeMesh:
 
 
 class ZenggeLight:
-    def __init__(self, name, id, mac, type, mesh=None):
-        self.mesh = mesh
-        self.name = name
+    def __init__(self, displayName, id, meshAddress, mac, deviceType, controlType, wiringType, otaFlag, placeID, mesh=None):
+        self.displayName = displayName
         self.id = id
+        self.meshAddress = meshAddress
         self.mac = mac
-        self.type = type
+        self.deviceType = deviceType
+        self.controlType = controlType
+        self.wiringType = wiringType
+        self.otaFlag = otaFlag
+        self.placeID = placeID
+        self.mesh = mesh
+        if mesh is None:
+            self.meshID = None
+        else:
+            self.meshID = mesh.meshID
         self.state = 0
         self.brightness = 0
         self.temperature = 0
@@ -183,20 +410,21 @@ class ZenggeLight:
         self.blue = 0
         self.rgb = None
         self.is_connected = False
-    async def connect(self):
-        await self.mesh.connect()
-        self.is_connected = True
     async def light_on(self):
-        packetData = [self.type,stateAction_Power,1]
-        await self.mesh.send_packet(self.id,opcode_SetState,packetData)
+        #packetData = bytes([self.deviceType,stateAction_Power,1])
+        packetData = [self.deviceType,stateAction_Power,1] ##MY FUNCTION
+        #await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
+        await self.mesh.send_packet(self.meshAddress,opcode_SetState,packetData) #MY FUNCTION
         self.state = 1
     async def light_off(self):
-        packetData = [self.type,stateAction_Power,0]
-        await self.mesh.send_packet(self.id,opcode_SetState,packetData)
+        #packetData = bytes([self.deviceType,stateAction_Power,0])
+        packetData = [self.deviceType,stateAction_Power,0]
+        #await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
+        await self.mesh.send_packet(self.meshAddress,opcode_SetState,packetData) #MY FUNCTION
         self.state = 0
     async def light_toggle(self):
-        packetData = [self.type,stateAction_Power,self.state^1]
-        await self.mesh.send_packet(self.id,opcode_SetState,packetData)
+        packetData = bytes([self.deviceType,stateAction_Power,self.state^1])
+        await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
         self.state = self.state^1
     #Brightness value accepts 0-100 (0 is off) *required*
     #Dimming target specifies dimming of RGB LEDs vs White LEDs
@@ -209,8 +437,8 @@ class ZenggeLight:
         gradient0 = format(gradient,'b').zfill(16)
         gradientLB = int(gradient0[8:16],2)
         gradientHB = int(gradient0[0:8],2)
-        packetData = [self.type,stateAction_Brightness,value,dimmingTarget,delayLB,delayHB,gradientLB,gradientHB]
-        await self.mesh.send_packet(self.id,opcode_SetBrightness,packetData)
+        packetData = bytes([self.deviceType,stateAction_Brightness,value,dimmingTarget,delayLB,delayHB,gradientLB,gradientHB])
+        await self.mesh.send_packet(opcode_SetBrightness,packetData,self.meshAddress)
         self.brightness = value
     # Change mode of light (RGB, Warm, CCT/Lum, AuxLight, ColorTemp/Lum/AuxLight)
     #   0x60 is the mode for static RGB (Value1,Value2,Value3 stand for RGB values 0-255)
@@ -219,20 +447,20 @@ class ZenggeLight:
     #   0x63 stands for auxiliary light (Value1 represents aux light brightness)
     #   0x64 stands for color temp value + aux light (Value1 represents CCT ratio value 1-100, Value 2 represents luminance value 0-100, Value 3 represents aux luminance value 0-100)
     async def light_RGB(self, r=0,g=0,b=0):
-        packetData = [self.type,colorMode_RGB,r,g,b]
-        await self.mesh.send_packet(self.id,opcode_SetColor,packetData)
+        packetData = bytes([self.deviceType,colorMode_RGB,r,g,b])
+        await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
         self.r = r
         self.g = g
         self.b = b
         self.rgb = True
     async def light_WarmWhite(self, LUM):
-        packetData = [self.type,colorMode_WarmWhite,LUM]
-        await self.mesh.send_packet(self.id,opcode_SetColor,packetData)
+        packetData = bytes([self.deviceType,colorMode_WarmWhite,LUM])
+        await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
         self.temperature = LUM
         self.rgb = False
     async def light_CCT(self, CCT,LUM):
-        packetData = [self.type,colorMode_CCT,CCT,LUM]
-        await self.mesh.send_packet(self.id,opcode_SetColor,packetData)
+        packetData = bytes([self.deviceType,colorMode_CCT,CCT,LUM])
+        await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
         self.temperature = CCT
         self.brightness = LUM
         self.rgb = False
