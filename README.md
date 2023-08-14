@@ -65,10 +65,11 @@ Example - Pull Mesh Settings from Hao Deng Server
 import Zengge_Bleak
 Zengge_Bleak.HaoDeng_SetCountryServer("US")
 Zengge_Bleak.HaoDeng_Login("usernameHere", "passwordHere")
+
 zenggeMesh = Zengge_Bleak.HaoDeng_GetMesh()
-print(zenggeMesh)
+Zengge_Bleak.HaoDeng_ListMesh()
 zenggeMeshDevices = Zengge_Bleak.HaoDeng_GetMeshDevices(zenggeMesh[0]['placeUniID'])
-print(zenggeMeshDevices)
+Zengge_Bleak.HaoDeng_ListMeshDevices()
 ```
 
 Current issues
