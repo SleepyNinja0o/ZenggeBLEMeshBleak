@@ -19,8 +19,8 @@ I believe there is a way to pair and generate encryption keys from your computer
 I have included the DB location of the device/mesh values you need in the example below in the following format:<br/>
 (DB Table - DB Column)<br/>
 
-Example use - Windows
-----------------------
+Example - Control lights
+----------------------------
 ```
 import Zengge_Bleak
 import asyncio
@@ -48,6 +48,16 @@ async def execute():
     await mesh.disconnect()
 
 asyncio.run(execute())
+```
+
+Example - Pull Mesh Settings from Hao Deng Server
+----------------------------------------
+```
+import Zengge_Bleak
+Zengge_Bleak.HaoDeng_SetCountryServer("US")
+Zengge_Bleak.HaoDeng_Login("usernameHere", "passwordHere")
+zenggeMesh = Zengge_Bleak.HaoDeng_GetMesh()
+zenggeMesh
 ```
 
 Current issues
