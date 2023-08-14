@@ -68,6 +68,7 @@ Zengge_Bleak.HaoDeng_Login("usernameHere", "passwordHere")
 zenggeMesh = Zengge_Bleak.HaoDeng_GetMesh()
 print("\n" + zenggeMesh + "\n")
 zenggeMeshDevices = HaoDeng_GetMeshDevices(zenggeMesh[0]['placeUniID'])
+print("\n" + zenggeMeshDevices)
 ```
 
 Current issues
