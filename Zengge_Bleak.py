@@ -54,13 +54,14 @@ UUID_Control = "00010203-0405-0607-0809-0a0b0c0d1912"
 UUID_Notify = "00010203-0405-0607-0809-0a0b0c0d1911"
 UUID_Pairing = "00010203-0405-0607-0809-0a0b0c0d1914"
 
-global magichue_countryservers,magichue_usertoken,magichue_devicesecret,magichue_userid,magichue_getmeshendpoint
+global magichue_countryservers,magichue_usertoken,magichue_devicesecret,magichue_userid,magichue_getmeshendpoint,magichue_getmeshdevicesendpoint,magichue_meshs,magichue_meshDevices
 magichue_countryservers = [{'nationName': 'Australian', 'nationCode': 'AU', 'serverApi': 'oameshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'oa.meshbroker.magichue.net'}, {'nationName': 'Avalon', 'nationCode': 'AL', 'serverApi': 'ttmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'tt.meshbroker.magichue.net'}, {'nationName': 'China', 'nationCode': 'CN', 'serverApi': 'cnmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'cn.meshbroker.magichue.net'}, {'nationName': 'England', 'nationCode': 'GB', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Espana', 'nationCode': 'ES', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'France', 'nationCode': 'FR', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Germany', 'nationCode': 'DE', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Italy', 'nationCode': 'IT', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Japan', 'nationCode': 'JP', 'serverApi': 'dymeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'dy.meshbroker.magichue.net'}, {'nationName': 'Russia', 'nationCode': 'RU', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}]
 magichue_countryserver = magichue_countryservers[10]['serverApi']
 magichue_connecturl = "http://" + magichue_countryserver
 magichue_nationdataendpoint = "apixp/MeshData/loadNationDataNew/ZG?language=en"
 magichue_userloginendpoint = "apixp/User001/LoginForUser/ZG"
 magichue_getmeshendpoint = 'apixp/MeshData/GetMyMeshPlaceItems/ZG?userId='
+magichue_getmeshdevicesendpoint = 'apixp/MeshData/GetMyMeshDeviceItems/ZG?placeUniID=&userId='
 magichue_usertoken = None
 magichue_devicesecret = None
 magichue_userid = None
@@ -203,7 +204,7 @@ def HaoDeng_Login(username, password):
 
 
 def HaoDeng_GetMesh():
-    global magichue_connecturl,magichue_getmeshendpoint,magichue_userid,magichue_usertoken
+    global magichue_connecturl,magichue_getmeshendpoint,magichue_userid,magichue_usertoken,magichue_meshs
     if magichue_usertoken is not None:
         headers = {
             'User-Agent': 'HaoDeng/1.5.7(ANDROID,10,en-US)',
@@ -219,6 +220,34 @@ def HaoDeng_GetMesh():
         else:
             print('Mesh settings retrieved successfully!')
             responseJSON = response.json()['result']
+            magichue_meshs = responseJSON
+            return responseJSON
+    else:
+        print("Login session not detected! Please login first using HaoDeng_Login method.")
+
+
+def HaoDeng_GetMeshDevices(placeUniID):
+    global magichue_connecturl,magichue_getmeshdevicesendpoint,magichue_userid,magichue_usertoken,magichue_meshDevices
+    if magichue_usertoken is not None:
+        headers = {
+            'User-Agent': 'HaoDeng/1.5.7(ANDROID,10,en-US)',
+            'Accept-Language': 'en-US',
+            'Accept': 'application/json',
+            'token': magichue_usertoken,
+            'Content-Type': 'application/json',
+            'Accept-Encoding': 'gzip'
+        }
+        if len(magichue_getmeshdevicesendpoint) == 58:
+            magichue_getmeshdevicesendpoint = magichue_getmeshdevicesendpoint.replace("placeUniID=","placeUniID=" + placeUniID)
+            magichue_getmeshdevicesendpoint = magichue_getmeshdevicesendpoint.replace("userId=","userId="+urllib.parse.quote_plus(magichue_userid))
+        print("Web URL: " + magichue_getmeshdevicesendpoint)
+        response = requests.get(magichue_connecturl + magichue_getmeshdevicesendpoint, headers=headers)
+        if response.status_code != 200:
+            print('Mesh devices retrieval FAILED! - %s' % response.json()['error'])
+        else:
+            print('Mesh devices retrieved successfully!')
+            responseJSON = response.json()['result']
+            magichue_meshDevices = responseJSON
             return responseJSON
     else:
         print("Login session not detected! Please login first using HaoDeng_Login method.")
