@@ -154,11 +154,11 @@ def HaoDeng_SetCountryServer(countryCode=None): #{'nationName': 'United States',
             print("The default Hao Deng server has been set to " + responseJSON[country]['nationCode'] + " - " + magichue_connecturl)
         else:
             for nation in responseJSON:
-                if nation['nationCode'] == upper(countryCode):
+                if nation['nationCode'] == countryCode.upper():
                     magichue_connecturl = "http://" + nation['serverApi']
-                    print("The default server has been set to: " + upper(countryCode) + " - " + magichue_connecturl)
+                    print("The default server has been set to: " + countryCode.upper() + " - " + magichue_connecturl)
             if magichue_connecturl is None:
-                print("HaoDeng server was not found for " + upper(countryCode) + "\nDefaulting to US server...")
+                print("HaoDeng server was not found for " + countryCode.upper() + "\nDefaulting to US server...")
                 magichue_connecturl = "http://" + magichue_countryservers[10]['serverApi']
 
 
