@@ -52,13 +52,13 @@ Example - Pull Mesh Settings from Hao Deng Server
 ----------------------------------------
 ```
 import Zengge_Bleak
-Zengge_Bleak.HaoDeng_SetCountryServer("US")
-Zengge_Bleak.HaoDeng_Login("usernameHere", "passwordHere")
+Zengge_Bleak.MagicHue_SetCountryServer("US")
+Zengge_Bleak.MagicHue_Login("usernameHere", "passwordHere")
 
 zenggeMesh = Zengge_Bleak.HaoDeng_GetMesh()
-Zengge_Bleak.HaoDeng_ListMesh(zenggeMesh)
+Zengge_Bleak.MagicHue_ListMesh(zenggeMesh)
 zenggeMeshDevices = Zengge_Bleak.HaoDeng_GetMeshDevices(zenggeMesh[0]['placeUniID'])
-Zengge_Bleak.HaoDeng_ListMeshDevices(zenggeMeshDevices)
+Zengge_Bleak.MagicHue_ListMeshDevices(zenggeMeshDevices)
 ```
 
 Current issues
