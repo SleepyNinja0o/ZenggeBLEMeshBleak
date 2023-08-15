@@ -8,7 +8,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 from django.utils.encoding import force_bytes, force_str
-from bleak import BleakClient
+from bleak import BleakClient,BleakScanner
+from bleak.exc import BleakError
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from os import urandom
@@ -66,6 +67,10 @@ magichue_usertoken = None
 magichue_devicesecret = None
 magichue_userid = None
 
+'''
+###REMOVE AFTER TESTING###
+These are some old fuctions I used before discovering packetutils tool from home-assistant-awox project
+
 def encrypt(key, data):
     k = AES.new(bytes(reversed(key)), AES.MODE_ECB)
     data = reversed(list(k.encrypt(bytes(reversed(data)))))
@@ -114,6 +119,20 @@ def decrypt_packet(sk, address, packet):
     for i in range(len(packet)-7):
       packet[i+7] ^= result[i]
     return packet
+'''
+
+def GenerateTimestampCheckCode():
+    SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
+    timestamp = str(int(time.time()*1000))
+    value = force_bytes("ZG" + timestamp)
+    backend = default_backend()
+    key = force_bytes(SECRET_KEY)
+    encryptor = Cipher(algorithms.AES(key), modes.ECB(), backend).encryptor()
+    padder = padding.PKCS7(algorithms.AES(key).block_size).padder()
+    padded_data = padder.update(value) + padder.finalize()
+    encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
+    checkcode = binascii.hexlify(encrypted_text).decode()
+    return timestamp,checkcode
 
 
 def HaoDeng_SetCountryServer(countryCode=None): #{'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}
@@ -161,20 +180,6 @@ def HaoDeng_SetCountryServer(countryCode=None): #{'nationName': 'United States',
             if magichue_connecturl is None:
                 print("HaoDeng server was not found for " + countryCode.upper() + "\nDefaulting to US server...")
                 magichue_connecturl = "http://" + magichue_countryservers[10]['serverApi']
-
-
-def GenerateTimestampCheckCode():
-    SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
-    timestamp = str(int(time.time()*1000))
-    value = force_bytes("ZG" + timestamp)
-    backend = default_backend()
-    key = force_bytes(SECRET_KEY)
-    encryptor = Cipher(algorithms.AES(key), modes.ECB(), backend).encryptor()
-    padder = padding.PKCS7(algorithms.AES(key).block_size).padder()
-    padded_data = padder.update(value) + padder.finalize()
-    encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
-    checkcode = binascii.hexlify(encrypted_text).decode()
-    return timestamp,checkcode
 
 
 def HaoDeng_Login(username, password):
@@ -283,10 +288,10 @@ def HaoDeng_ListMeshDevices(zenggeMeshDevices):
 
 class ZenggeMesh:
     def __init__(self, mac, meshID, meshName="ZenggeMesh", meshPass="ZenggeTechnology", meshLTK=None):
-        self.packet_count = random.randrange(0xffff)
+        #self.packet_count = random.randrange(0xffff) ###REMOVE AFTER TESTING###
         self.mac = mac
-        self.macarray = mac.split(':')
-        self.macdata = [int(self.macarray[5], 16), int(self.macarray[4], 16), int(self.macarray[3], 16), int(self.macarray[2], 16), int(self.macarray[1], 16), int(self.macarray[0], 16)]
+        #self.macarray = mac.split(':') ###REMOVE AFTER TESTING###
+        #self.macdata = [int(self.macarray[5], 16), int(self.macarray[4], 16), int(self.macarray[3], 16), int(self.macarray[2], 16), int(self.macarray[1], 16), int(self.macarray[0], 16)] ###REMOVE AFTER TESTING###
         self.meshID = meshID
         self.meshName = meshName
         self.meshPass = meshPass
@@ -295,21 +300,24 @@ class ZenggeMesh:
         self.sk = None
         self.devices = []
         self.is_connected = False
-    async def mesh_login_OLD(self):
-        if self.client == None:
-            return
-        data = [0] * 16
-        random_data = get_random_bytes(8)
-        for i in range(8):
-            data[i] = random_data[i]
-        enc_data = key_encrypt(self.meshName, self.meshPass, data)
-        packet = [0x0c]
-        packet += data[0:8]
-        packet += enc_data[0:8]
-        pairReply = await self.client.write_gatt_char(UUID_Pairing, bytes(packet), True)
-        await asyncio.sleep(0.3)
-        data2 = await self.client.read_gatt_char(UUID_Pairing)
-        self.sk = generate_sk(self.meshName, self.meshPass, data[0:8], data2[1:9])
+    '''
+    ###REMOVE AFTER TESTING###
+        async def mesh_login_OLD(self):
+            if self.client == None:
+                return
+            data = [0] * 16
+            random_data = get_random_bytes(8)
+            for i in range(8):
+                data[i] = random_data[i]
+            enc_data = key_encrypt(self.meshName, self.meshPass, data)
+            packet = [0x0c]
+            packet += data[0:8]
+            packet += enc_data[0:8]
+            pairReply = await self.client.write_gatt_char(UUID_Pairing, bytes(packet), True)
+            await asyncio.sleep(0.3)
+            data2 = await self.client.read_gatt_char(UUID_Pairing)
+            self.sk = generate_sk(self.meshName, self.meshPass, data[0:8], data2[1:9])
+    '''
     async def mesh_login(self):
         if self.client == None:
             return
@@ -319,35 +327,40 @@ class ZenggeMesh:
         await asyncio.sleep(0.3)
         reply = await self.client.read_gatt_char(UUID_Pairing)
         self.sk = pckt.make_session_key(self.meshName.encode(), self.meshPass.encode(), session_random, reply[1:9])
-    async def send_packet(self, target, command, data):
-        packet = [0] * 20
-        packet[0] = self.packet_count & 0xff
-        packet[1] = self.packet_count >> 8 & 0xff
-        packet[5] = target & 0xff
-        packet[6] = (target >> 8) & 0xff
-        packet[7] = command
-        packet[8] = self.meshID & 0xff
-        packet[9] = (self.meshID >> 8) & 0xff
-        for i in range(len(data)):
-            packet[10 + i] = data[i]
-        enc_packet = encrypt_packet(self.sk, self.macdata, packet)
-        bytes(enc_packet)
-        print(bytes(enc_packet))
-        self.packet_count += 1
-        if self.packet_count > 65535:
-            self.packet_count = 1
-        # BLE connections may not be stable. Spend up to 10 seconds trying to
-        # reconnect before giving up.
-        initial = time.time()
-        while True:
-            if time.time() - initial >= 10:
-                raise Exception("Unable to connect")
-            try:
-                await self.client.write_gatt_char(UUID_Control, bytes(enc_packet))
-                break
-            except:
-                self.connect()
-    async def send_packet_OLD(self, command, data, dest=None, withResponse=True, attempt=0):
+
+    '''
+    ###REMOVE AFTER TESTING###
+        async def send_packet_OLD(self, target, command, data):
+            packet = [0] * 20
+            packet[0] = self.packet_count & 0xff
+            packet[1] = self.packet_count >> 8 & 0xff
+            packet[5] = target & 0xff
+            packet[6] = (target >> 8) & 0xff
+            packet[7] = command
+            packet[8] = self.meshID & 0xff
+            packet[9] = (self.meshID >> 8) & 0xff
+            for i in range(len(data)):
+                packet[10 + i] = data[i]
+            enc_packet = encrypt_packet(self.sk, self.macdata, packet)
+            bytes(enc_packet)
+            print(bytes(enc_packet))
+            self.packet_count += 1
+            if self.packet_count > 65535:
+                self.packet_count = 1
+            # BLE connections may not be stable. Spend up to 10 seconds trying to
+            # reconnect before giving up.
+            initial = time.time()
+            while True:
+                if time.time() - initial >= 10:
+                    raise Exception("Unable to connect")
+                try:
+                    await self.client.write_gatt_char(UUID_Control, bytes(enc_packet))
+                    break
+                except:
+                    self.connect()
+    '''
+
+    async def send_packet(self, command, data, dest=None, withResponse=True, attempt=0):
         """
         Args:
             command: The command, as a number.
@@ -358,27 +371,27 @@ class ZenggeMesh:
         assert (self.sk)
         if dest == None: dest = self.meshID
         packet = pckt.make_command_packet(self.sk, self.mac, dest, command, data)
-        print(packet)
-        packet
         try:
-            #logger.info(f'[{self.mesh_name.decode()}][{self.mac}] Writing command {command} data {repr(data)}')
+            print(f'[{self.meshName.decode()}][{self.mac}] Writing command {command} data {repr(data)}')
             await self.client.write_gatt_char(UUID_Control, packet)
-            #self.btdevice.char_write(uuid=COMMAND_CHAR_UUID, value=packet, wait_for_response=withResponse)
             return True
         except (NotConnectedError, NotificationTimeout) as err:
-            #logger.warning(f'[{self.mesh_name.decode()}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
-            if attempt < 3:
+            print(f'[{self.meshName.decode()}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
+            if attempt < 2:
                 self.connect()
                 return self.send_packet(command, data, dest, withResponse, attempt+1)
             else:
                 self.sk = None
                 raise err
         except Exception as err:
-            #logger.exception(f'[{self.mesh_name.decode()}][{self.mac}] Command failed, device is disconnected: [{type(err).__name__}] {err}', err)
+            print(f'[{self.meshName.decode()}][{self.mac}] Command failed, device is disconnected: [{type(err).__name__}] {err}', err)
             self.sk = None
             raise err
     async def connect(self):
         try:
+            device = await BleakScanner.find_device_by_address(self.mac, timeout=10.0)
+            if not device:
+                raise BleakError(f"A device with address {self.mac} could not be found.")
             self.client = BleakClient(self.mac)
             await self.client.connect()
             print("Connected to device!")
@@ -430,7 +443,6 @@ class ZenggeMesh:
         if reply[0] == 0x7:
             self.meshName = new_mesh_name
             self.meshPass = new_mesh_password
-            #print(f'[{self.meshName}][{self.mac}] Mesh network settings accepted.')
             print(f'[{self.meshName}]-[{self.meshPass}]-[{self.mac}] Mesh network settings accepted.')
             return True
         else:
@@ -444,9 +456,8 @@ class ZenggeMesh:
 
 
 class ZenggeLight:
-    def __init__(self, displayName, id, meshAddress, mac, deviceType, controlType, wiringType, otaFlag, placeID, mesh=None):
+    def __init__(self, displayName, meshAddress, mac, deviceType, controlType, wiringType, otaFlag, placeID, mesh=None):
         self.displayName = displayName
-        self.id = id
         self.meshAddress = meshAddress
         self.mac = mac
         self.deviceType = deviceType
@@ -455,10 +466,7 @@ class ZenggeLight:
         self.otaFlag = otaFlag
         self.placeID = placeID
         self.mesh = mesh
-        if mesh is None:
-            self.meshID = None
-        else:
-            self.meshID = mesh.meshID
+        self.meshID = None if mesh is None else mesh.meshID
         self.state = 0
         self.brightness = 0
         self.temperature = 0
@@ -468,16 +476,12 @@ class ZenggeLight:
         self.rgb = None
         self.is_connected = False
     async def light_on(self):
-        #packetData = bytes([self.deviceType,stateAction_Power,1])
-        packetData = [self.deviceType,stateAction_Power,1] ##MY FUNCTION
-        #await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
-        await self.mesh.send_packet(self.meshAddress,opcode_SetState,packetData) #MY FUNCTION
+        packetData = bytes([self.deviceType,stateAction_Power,1])
+        await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
         self.state = 1
     async def light_off(self):
-        #packetData = bytes([self.deviceType,stateAction_Power,0])
-        packetData = [self.deviceType,stateAction_Power,0]
-        #await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
-        await self.mesh.send_packet(self.meshAddress,opcode_SetState,packetData) #MY FUNCTION
+        packetData = bytes([self.deviceType,stateAction_Power,0])
+        await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
         self.state = 0
     async def light_toggle(self):
         packetData = bytes([self.deviceType,stateAction_Power,self.state^1])
