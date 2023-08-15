@@ -135,7 +135,7 @@ def GenerateTimestampCheckCode():
     return timestamp,checkcode
 
 
-def HaoDeng_SetCountryServer(countryCode=None): #{'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}
+def MagicHue_SetCountryServer(countryCode=None): #{'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}
     global magichue_countryservers,magichue_nationdataendpoint,magichue_connecturl
     magichue_countryserver = magichue_countryservers[10]['serverApi'] #Default to USA server for pulling country list
     magichue_connecturl = "http://" + magichue_countryserver + magichue_nationdataendpoint
@@ -178,11 +178,11 @@ def HaoDeng_SetCountryServer(countryCode=None): #{'nationName': 'United States',
                     magichue_connecturl = "http://" + nation['serverApi']
                     print("The default server has been set to: " + countryCode.upper() + " - " + magichue_connecturl)
             if magichue_connecturl is None:
-                print("HaoDeng server was not found for " + countryCode.upper() + "\nDefaulting to US server...")
+                print("MagicHue server was not found for " + countryCode.upper() + "\nDefaulting to US server...")
                 magichue_connecturl = "http://" + magichue_countryservers[10]['serverApi']
 
 
-def HaoDeng_Login(username, password):
+def MagicHue_Login(username, password):
     global magichue_usertoken,magichue_userid,magichue_devicesecret,magichue_connecturl,magichue_userloginendpoint
     timestampcheckcode = GenerateTimestampCheckCode()
     timestamp = timestampcheckcode[0]
@@ -208,7 +208,7 @@ def HaoDeng_Login(username, password):
         magichue_devicesecret = responseJSON['deviceSecret']
 
 
-def HaoDeng_GetMesh():
+def MagicHue_GetMesh():
     global magichue_connecturl,magichue_getmeshendpoint,magichue_userid,magichue_usertoken,magichue_meshs
     if magichue_usertoken is not None:
         headers = {
@@ -228,10 +228,10 @@ def HaoDeng_GetMesh():
             magichue_meshs = responseJSON
             return responseJSON
     else:
-        print("Login session not detected! Please login first using HaoDeng_Login method.")
+        print("Login session not detected! Please login first using MagicHue_Login method.")
 
 
-def HaoDeng_GetMeshDevices(placeUniID):
+def MagicHue_GetMeshDevices(placeUniID):
     global magichue_connecturl,magichue_getmeshdevicesendpoint,magichue_userid,magichue_usertoken,magichue_meshDevices
     if magichue_usertoken is not None:
         headers = {
@@ -255,10 +255,10 @@ def HaoDeng_GetMeshDevices(placeUniID):
             magichue_meshDevices = responseJSON
             return responseJSON
     else:
-        print("Login session not detected! Please login first using HaoDeng_Login method.")
+        print("Login session not detected! Please login first using MagicHue_Login method.")
 
 
-def HaoDeng_ListMesh(zenggeMesh):
+def MagicHue_ListMesh(zenggeMesh):
     for mesh in zenggeMesh:
         print("DisplayName: "+mesh['displayName'])
         print("PlaceUniID: "+mesh['placeUniID'])
@@ -273,7 +273,7 @@ def HaoDeng_ListMesh(zenggeMesh):
         print("\n")
 
 
-def HaoDeng_ListMeshDevices(zenggeMeshDevices):
+def MagicHue_ListMeshDevices(zenggeMeshDevices):
     for device in zenggeMeshDevices:
         print("DisplayName: "+device['displayName'])
         print("MACAddress: "+device['macAddress'])
@@ -372,21 +372,17 @@ class ZenggeMesh:
         if dest == None: dest = self.meshID
         packet = pckt.make_command_packet(self.sk, self.mac, dest, command, data)
         try:
-            print(f'[{self.meshName.decode()}][{self.mac}] Writing command {command} data {repr(data)}')
+            print(f'[{self.meshName}][{self.mac}] Writing command {command} data {repr(data)}')
             await self.client.write_gatt_char(UUID_Control, packet)
             return True
-        except (NotConnectedError, NotificationTimeout) as err:
-            print(f'[{self.meshName.decode()}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
+        except Exception as err:
+            print(f'[{self.meshName}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
             if attempt < 2:
                 self.connect()
                 return self.send_packet(command, data, dest, withResponse, attempt+1)
             else:
                 self.sk = None
                 raise err
-        except Exception as err:
-            print(f'[{self.meshName.decode()}][{self.mac}] Command failed, device is disconnected: [{type(err).__name__}] {err}', err)
-            self.sk = None
-            raise err
     async def connect(self):
         try:
             device = await BleakScanner.find_device_by_address(self.mac, timeout=10.0)
@@ -475,15 +471,22 @@ class ZenggeLight:
         self.blue = 0
         self.rgb = None
         self.is_connected = False
+    async def check_mesh_connection(self):
+        if self.mesh.is_connected is False:
+            print("Mesh is not connected! Connecting...")
+            await self.mesh.connect()
     async def light_on(self):
+        await self.check_mesh_connection()
         packetData = bytes([self.deviceType,stateAction_Power,1])
         await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
         self.state = 1
     async def light_off(self):
+        self.check_mesh_connection()
         packetData = bytes([self.deviceType,stateAction_Power,0])
         await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
         self.state = 0
     async def light_toggle(self):
+        self.check_mesh_connection()
         packetData = bytes([self.deviceType,stateAction_Power,self.state^1])
         await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
         self.state = self.state^1
@@ -492,6 +495,7 @@ class ZenggeLight:
     #Delay is in 100ms units *Default is 0-No delay* (Max value is 65535
     #Gradient is in 100ms units *Default is 0-No gradient*
     async def light_brightness(self, value,dimmingTarget=dimmingTarget_RGBWC,delay=0,gradient=0):
+        self.check_mesh_connection()
         delay0 = format(delay,'b').zfill(16)
         delayLB = int(delay0[8:16],2)
         delayHB = int(delay0[0:8],2)
@@ -508,6 +512,7 @@ class ZenggeLight:
     #   0x63 stands for auxiliary light (Value1 represents aux light brightness)
     #   0x64 stands for color temp value + aux light (Value1 represents CCT ratio value 1-100, Value 2 represents luminance value 0-100, Value 3 represents aux luminance value 0-100)
     async def light_RGB(self, r=0,g=0,b=0):
+        self.check_mesh_connection()
         packetData = bytes([self.deviceType,colorMode_RGB,r,g,b])
         await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
         self.r = r
@@ -515,11 +520,13 @@ class ZenggeLight:
         self.b = b
         self.rgb = True
     async def light_WarmWhite(self, LUM):
+        self.check_mesh_connection()
         packetData = bytes([self.deviceType,colorMode_WarmWhite,LUM])
         await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
         self.temperature = LUM
         self.rgb = False
     async def light_CCT(self, CCT,LUM):
+        self.check_mesh_connection()
         packetData = bytes([self.deviceType,colorMode_CCT,CCT,LUM])
         await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
         self.temperature = CCT
