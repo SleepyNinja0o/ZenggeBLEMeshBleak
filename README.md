@@ -48,7 +48,7 @@ async def execute():
 asyncio.run(execute())
 ```
 
-Example - Pull Mesh Settings from Hao Deng Server
+Example - Pull Mesh Information from MagicHue Server
 ----------------------------------------
 ```
 import Zengge_Bleak
