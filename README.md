@@ -22,7 +22,6 @@ Example - Control lights
 ```
 import Zengge_Bleak
 import asyncio
-import time
 
 meshID = 0x0211                   #(MeshDevice - meshUUID)
 meshName = "q31k125n759z2fkn"     #(MeshPlace - meshKey)
@@ -41,7 +40,7 @@ async def execute():
     await mesh.connect()
     await device.light_on()
     await device.light_RGB(255,0,0)
-    time.sleep(3)
+    asyncio.sleep(3)
     await device.light_off()
     await mesh.disconnect()
 
