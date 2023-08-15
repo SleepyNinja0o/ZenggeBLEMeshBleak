@@ -51,14 +51,15 @@ asyncio.run(execute())
 Example - Pull Mesh Settings from Hao Deng Server
 ----------------------------------------
 ```
-import Zengge_Bleak
-Zengge_Bleak.MagicHue_SetCountryServer("US")
-Zengge_Bleak.MagicHue_Login("usernameHere", "passwordHere")
+from Zengge_Bleak import *
+MagicHue_SetCountryServer("US")
+MagicHue_Login("usernameHere", "passwordHere")
 
-zenggeMesh = Zengge_Bleak.MagicHue_GetMeshes()
-Zengge_Bleak.MagicHue_ListMeshes(zenggeMesh)
-zenggeMeshDevices = Zengge_Bleak.MagicHue_GetMeshDevices(zenggeMesh[0]['placeUniID'])
-Zengge_Bleak.MagicHue_ListMeshDevices(zenggeMeshDevices)
+MagicHue_GetMeshes()
+MagicHue_GetMeshDevices()
+
+MagicHue_ListMeshes()
+MagicHue_ListMeshDevices()
 ```
 
 Current issues
