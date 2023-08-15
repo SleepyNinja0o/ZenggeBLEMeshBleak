@@ -63,7 +63,7 @@ magichue_nationdataendpoint = "apixp/MeshData/loadNationDataNew/ZG?language=en"
 magichue_userloginendpoint = "apixp/User001/LoginForUser/ZG"
 magichue_getmeshendpoint = 'apixp/MeshData/GetMyMeshPlaceItems/ZG?userId='
 magichue_getmeshdevicesendpoint = 'apixp/MeshData/GetMyMeshDeviceItems/ZG?placeUniID=&userId='
-magichue_meshes = []
+magichue_meshes = None
 magichue_usertoken = None
 magichue_devicesecret = None
 magichue_userid = None
@@ -226,13 +226,14 @@ def MagicHue_GetMeshes():
         else:
             print('Mesh settings retrieved successfully!')
             responseJSON = response.json()['result']
-            magichue_meshes.append(responseJSON)
-            return responseJSON
+            magichue_meshes = responseJSON
+            for mesh in magichue_meshes:
+                mesh['devices'] = None
     else:
         print("Login session not detected! Please login first using MagicHue_Login method.")
 
 
-def MagicHue_GetMeshDevices(placeUniID):
+def MagicHue_GetMeshDevices():
     global magichue_connecturl,magichue_getmeshdevicesendpoint,magichue_userid,magichue_usertoken,magichue_meshes
     if magichue_usertoken is not None:
         headers = {
@@ -243,24 +244,23 @@ def MagicHue_GetMeshDevices(placeUniID):
             'Content-Type': 'application/json',
             'Accept-Encoding': 'gzip'
         }
-        if len(magichue_getmeshdevicesendpoint) == 58:
-            magichue_getmeshdevicesendpoint = magichue_getmeshdevicesendpoint.replace("placeUniID=","placeUniID=" + placeUniID)
-            magichue_getmeshdevicesendpoint = magichue_getmeshdevicesendpoint.replace("userId=","userId="+urllib.parse.quote_plus(magichue_userid))
-        print("Web URL: " + magichue_getmeshdevicesendpoint)
-        response = requests.get(magichue_connecturl + magichue_getmeshdevicesendpoint, headers=headers)
-        if response.status_code != 200:
-            print('Mesh devices retrieval FAILED! - %s' % response.json()['error'])
-        else:
-            print('Mesh devices retrieved successfully!')
-            responseJSON = response.json()['result']
-            magichue_meshDevices = responseJSON
-            return responseJSON
+        for mesh in magichue_meshes:
+            placeUniID = mesh['placeUniID']
+            magichue_getmeshdevicesendpointnew = magichue_getmeshdevicesendpoint.replace("placeUniID=","placeUniID=" + placeUniID)
+            magichue_getmeshdevicesendpointnew = magichue_getmeshdevicesendpointnew.replace("userId=","userId="+urllib.parse.quote_plus(magichue_userid))
+            response = requests.get(magichue_connecturl + magichue_getmeshdevicesendpointnew, headers=headers)
+            if response.status_code != 200:
+                print('Mesh device retrieval FAILED for placeUniID: ' + placeUniID + ' - ' + response.json()['error'])
+            else:
+                print('Mesh devices retrieved for placeUniID: ' + placeUniID)
+                responseJSON = response.json()['result']
+                mesh.update({'devices':responseJSON})
     else:
         print("Login session not detected! Please login first using MagicHue_Login method.")
 
 
-def MagicHue_ListMeshes(zenggeMesh):
-    for mesh in zenggeMesh:
+def MagicHue_ListMeshes():
+    for mesh in magichue_meshes:
         print("DisplayName: "+mesh['displayName'])
         print("PlaceUniID: "+mesh['placeUniID'])
         print("UserID: "+mesh['userID'])
@@ -271,20 +271,23 @@ def MagicHue_ListMeshes(zenggeMesh):
         print("LastUpdateDate: "+mesh['lastUpdateDate'])
         print("MaxMeshAddress: "+str(mesh['maxMeshAddress']))
         print("MaxGroupID: "+str(mesh['maxGroupID']))
-        print("\n")
+        print("")
 
 
-def MagicHue_ListMeshDevices(zenggeMeshDevices):
-    for device in zenggeMeshDevices:
-        print("DisplayName: "+device['displayName'])
-        print("MACAddress: "+device['macAddress'])
-        print("PlaceUniID: "+device['placeUniID'])
-        print("MeshAddress: "+str(device['meshAddress']))
-        print("MeshUUID: "+str(device['meshUUID']))
-        print("DeviceType: "+str(device['deviceType']))
-        print("WiringType: "+str(device['wiringType']))
-        print("LastUpdateDate: "+device['lastUpdateDate'])
-        print("\n")
+def MagicHue_ListMeshDevices():
+    for mesh in magichue_meshes:
+        print("Mesh DisplayName: "+mesh['displayName'])
+        print("MeshKey: "+mesh['meshKey']+'\n')
+        for device in mesh['devices']:
+            print("\tDisplayName: "+device['displayName'])
+            print("\tMACAddress: "+device['macAddress'])
+            print("\tPlaceUniID: "+device['placeUniID'])
+            print("\tMeshAddress: "+str(device['meshAddress']))
+            print("\tMeshUUID: "+str(device['meshUUID']))
+            print("\tDeviceType: "+str(device['deviceType']))
+            print("\tWiringType: "+str(device['wiringType']))
+            print("\tLastUpdateDate: "+device['lastUpdateDate'])
+            print("")
 
 
 class ZenggeMesh:
