@@ -55,9 +55,9 @@ import Zengge_Bleak
 Zengge_Bleak.MagicHue_SetCountryServer("US")
 Zengge_Bleak.MagicHue_Login("usernameHere", "passwordHere")
 
-zenggeMesh = Zengge_Bleak.HaoDeng_GetMesh()
+zenggeMesh = Zengge_Bleak.MagicHue_GetMesh()
 Zengge_Bleak.MagicHue_ListMesh(zenggeMesh)
-zenggeMeshDevices = Zengge_Bleak.HaoDeng_GetMeshDevices(zenggeMesh[0]['placeUniID'])
+zenggeMeshDevices = Zengge_Bleak.MagicHue_GetMeshDevices(zenggeMesh[0]['placeUniID'])
 Zengge_Bleak.MagicHue_ListMeshDevices(zenggeMeshDevices)
 ```
 
