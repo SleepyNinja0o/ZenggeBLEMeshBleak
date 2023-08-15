@@ -1,6 +1,7 @@
 ZengeeBLEMeshBleak
 =========================================
-Ported Google's python-dimond library from bluepy to Bleak for use with Zengee BLE mesh devices. Ultimate goal is Zengee Home Assistant integration.<br/>
+Building a python module for controlling Zengee BLE mesh devices using Bleak as the backend.<br/>
+Ultimate goal is Zengee Home Assistant integration.<br/>
 
 Requirements
 ------------
