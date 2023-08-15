@@ -1,5 +1,5 @@
 '''
-The Telink encryption functions used in this project were pulled from Google's python-dimond project
+The Telink encryption functions used in this project were pulled from Google's python-dimond project (NO LONGER USED)
     https://github.com/google/python-dimond
 Code for changing Mesh Name and Password using factory settings was pulled from home-assistant-awox project
     https://github.com/fsaris/home-assistant-awox
