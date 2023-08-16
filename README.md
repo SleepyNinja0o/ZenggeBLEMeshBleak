@@ -24,8 +24,8 @@ import Zengge_Bleak
 Zengge_Bleak.MagicHue_SetCountryServer("US")
 Zengge_Bleak.MagicHue_Login("usernameHere", "passwordHere")
 
-Zengge_Bleak.MagicHue_GetMeshes()
-Zengge_Bleak.MagicHue_GetMeshDevices()
+Zengge_Bleak.MagicHue_GetMeshes()       #Saved to global variable 'magichue_meshes'
+Zengge_Bleak.MagicHue_GetMeshDevices()  #Saved to 'devices' attribute under global variable 'magichue_meshes'
 
 Zengge_Bleak.MagicHue_ListMeshes()
 Zengge_Bleak.MagicHue_ListMeshDevices()
