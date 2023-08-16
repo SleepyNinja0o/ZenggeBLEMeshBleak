@@ -54,11 +54,11 @@ UUID_CONTROL = "00010203-0405-0607-0809-0a0b0c0d1912"
 UUID_NOTIFY = "00010203-0405-0607-0809-0a0b0c0d1911"
 UUID_PAIRING = "00010203-0405-0607-0809-0a0b0c0d1914"
 
-#SERVICE_DEVICE_INFORMATION(UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb"), "Device Information Service")
-#CHARACTERISTIC_FIRMWARE(UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb"), "Firmware Revision")
-#CHARACTERISTIC_MANUFACTURER(UUID.fromString("00002a29-0000-1000-8000-00805f9b34fb"), "Manufacturer Name")
-#CHARACTERISTIC_MODEL(UUID.fromString("00002a24-0000-1000-8000-00805f9b34fb"), "Model Number")
-#CHARACTERISTIC_HARDWARE(UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb"), "Hardware Revision")
+UUID_SERVICE_DEVICEINFORMATION = "0000180a-0000-1000-8000-00805f9b34fb"
+UUID_FIRMWARE = "00002a26-0000-1000-8000-00805f9b34fb"
+UUID_MANUFACTURER = "00002a29-0000-1000-8000-00805f9b34fb"
+UUID_MODEL = "00002a24-0000-1000-8000-00805f9b34fb"
+UUID_HARDWARE = "00002a27-0000-1000-8000-00805f9b34fb"
 
 global magichue_countryservers,magichue_usertoken,magichue_devicesecret,magichue_userid,magichue_getmeshendpoint,magichue_getmeshdevicesendpoint,magichue_meshes
 magichue_countryservers = [{'nationName': 'Australian', 'nationCode': 'AU', 'serverApi': 'oameshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'oa.meshbroker.magichue.net'}, {'nationName': 'Avalon', 'nationCode': 'AL', 'serverApi': 'ttmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'tt.meshbroker.magichue.net'}, {'nationName': 'China', 'nationCode': 'CN', 'serverApi': 'cnmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'cn.meshbroker.magichue.net'}, {'nationName': 'England', 'nationCode': 'GB', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Espana', 'nationCode': 'ES', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'France', 'nationCode': 'FR', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Germany', 'nationCode': 'DE', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Italy', 'nationCode': 'IT', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Japan', 'nationCode': 'JP', 'serverApi': 'dymeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'dy.meshbroker.magichue.net'}, {'nationName': 'Russia', 'nationCode': 'RU', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}]
@@ -126,6 +126,14 @@ def decrypt_packet(sk, address, packet):
       packet[i+7] ^= result[i]
     return packet
 '''
+
+def notification_handler(sender, data):
+    """
+    Simple notification handler which prints the data received.
+    This will be modified later once Bleak implements a fix for start_notify issue.
+    """
+    print("{0}: {1}".format(sender, data2))
+
 
 def GenerateTimestampCheckCode():
     SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
@@ -392,6 +400,10 @@ class ZenggeMesh:
             else:
                 self.sk = None
                 raise err
+    async def read_gatt_char(self, char):
+        assert (self.sk)
+        reply = await self.client.read_gatt_char(char)
+        return reply
     async def connect(self):
         try:
             device = await BleakScanner.find_device_by_address(self.mac, timeout=10.0)
@@ -405,6 +417,7 @@ class ZenggeMesh:
                 raise Exception(f"Mesh login failed!")
             else:
                 print("Mesh login success!")
+            await self.client.start_notify(UUID_NOTIFY,notification_handler) #This will be modified later once Bleak implements a fix for start_notify issue.
             self.is_connected = True
         except Exception as e:
             print(f"Connection to {self.mac} failed!\nError: {e}")
