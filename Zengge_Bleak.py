@@ -438,7 +438,7 @@ class ZenggeMesh:
         message = pckt.encrypt(self.sk, new_mesh_long_term_key.encode())
         message.insert(0, 0x6)
         await self.client.write_gatt_char(UUID_Pairing, message)
-        time.sleep(1)
+        asyncio.sleep(1)
         reply = bytearray(await self.client.read_gatt_char(UUID_Pairing))
         if reply[0] == 0x7:
             self.meshName = new_mesh_name
