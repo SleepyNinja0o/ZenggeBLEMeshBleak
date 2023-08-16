@@ -17,7 +17,21 @@ Install via PowerShell using:<br/>
 ("pycryptodome","cryptography","requests","django","bleak") | foreach {pip install $_}
 ```
 
-Example - Control lights
+Example - Pull Mesh Information from MagicHue Server
+----------------------------------------
+```
+import Zengge_Bleak
+Zengge_Bleak.MagicHue_SetCountryServer("US")
+Zengge_Bleak.MagicHue_Login("usernameHere", "passwordHere")
+
+Zengge_Bleak.MagicHue_GetMeshes()
+Zengge_Bleak.MagicHue_GetMeshDevices()
+
+Zengge_Bleak.MagicHue_ListMeshes()
+Zengge_Bleak.MagicHue_ListMeshDevices()
+```
+
+Example - Control Lights
 ----------------------------
 ```
 import Zengge_Bleak
@@ -45,20 +59,6 @@ async def execute():
     await mesh.disconnect()
 
 asyncio.run(execute())
-```
-
-Example - Pull Mesh Information from MagicHue Server
-----------------------------------------
-```
-import Zengge_Bleak
-Zengge_Bleak.MagicHue_SetCountryServer("US")
-Zengge_Bleak.MagicHue_Login("usernameHere", "passwordHere")
-
-Zengge_Bleak.MagicHue_GetMeshes()
-Zengge_Bleak.MagicHue_GetMeshDevices()
-
-Zengge_Bleak.MagicHue_ListMeshes()
-Zengge_Bleak.MagicHue_ListMeshDevices()
 ```
 
 Current issues
