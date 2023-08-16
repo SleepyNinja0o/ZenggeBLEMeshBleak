@@ -1,7 +1,7 @@
 '''
 The Telink encryption functions used in this project were pulled from Google's python-dimond project (NO LONGER USED)
     https://github.com/google/python-dimond
-Code for changing Mesh Name and Password using factory settings was pulled from home-assistant-awox project
+Code for changing Mesh Name and Password using factory settings was pulled from home-assistant-awox project (As well as new Telink packet functions)
     https://github.com/fsaris/home-assistant-awox
 '''
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -24,36 +24,35 @@ import random
 import time
 import asyncio
 
-deviceAddress_ALL = 0
-deviceColorTemp = 0
-deviceMode_White = 0x0
-deviceMode_RGB = 0x3f
-deviceMode_CCT = 0x40
-opcode_SetColor = 0xe2
-opcode_SetCCT = 0xf4
-opcode_SetState = 0xd0
-opcode_SetBrightness = 0xd0
-opcode_SetFlash = 0xd2
-opcode_Response = 0xdc
-stateAction_Power = 0x01
-stateAction_Brightness = 0x02
-stateAction_IncreaseBrightness = 0x03
-stateAction_DecreaseBrightness = 0x04
-colorMode_RGB = 0x60
-colorMode_WarmWhite = 0x61
-colorMode_CCT = 0x62
-colorMode_AUX = 0x63
-colorMode_CCTAUX = 0x64
-dimmingTarget_RGBkWC = 0x01 #Set RGB, Keep WC
-dimmingTarget_WCkRGB = 0x02 #Set WC, Keep RGB
-dimmingTarget_RGBWC = 0x03  #Set RGB & WC
-dimmingTarget_RGBoWC = 0x04 #Set RGB, WC Off
-dimmingTarget_WCoRGB = 0x05 #Set WC, RGB Off
-dimmingTarget_Auto = 0x06   #Set lights according to situation
-UUID_Service = "00010203-0405-0607-0809-0a0b0c0d1910"
-UUID_Control = "00010203-0405-0607-0809-0a0b0c0d1912"
-UUID_Notify = "00010203-0405-0607-0809-0a0b0c0d1911"
-UUID_Pairing = "00010203-0405-0607-0809-0a0b0c0d1914"
+OPCODE_SETCOLOR = 0xe2
+OPCODE_SETCCT = 0xf4
+OPCODE_SETSTATE = 0xd0
+OPCODE_SETBRIGHTNESS = 0xd0
+OPCODE_SETFLASH = 0xd2
+OPCODE_RESPONSE = 0xdc
+
+STATEACTION_POWER = 0x01
+STATEACTION_BRIGHTNESS = 0x02
+STATEACTION_INCREASEBRIGHTNESS = 0x03
+STATEACTION_DECREASEBRIGHTNESS = 0x04
+
+COLORMODE_RGB = 0x60
+COLORMODE_WARMWHITE = 0x61
+COLORMODE_CCT = 0x62
+COLORMODE_AUX = 0x63
+COLORMODE_CCTAUX = 0x64
+
+DIMMINGTARGET_RGBKWC = 0x01 #Set RGB, Keep WC
+DIMMINGTARGET_WCKRGB = 0x02 #Set WC, Keep RGB
+DIMMINGTARGET_RGBWC = 0x03  #Set RGB & WC
+DIMMINGTARGET_RGBOWC = 0x04 #Set RGB, WC Off
+DIMMINGTARGET_WCORGB = 0x05 #Set WC, RGB Off
+DIMMINGTARGET_AUTO = 0x06   #Set lights according to situation
+
+UUID_SERVICE = "00010203-0405-0607-0809-0a0b0c0d1910"
+UUID_CONTROL = "00010203-0405-0607-0809-0a0b0c0d1912"
+UUID_NOTIFY = "00010203-0405-0607-0809-0a0b0c0d1911"
+UUID_PAIRING = "00010203-0405-0607-0809-0a0b0c0d1914"
 
 global magichue_countryservers,magichue_usertoken,magichue_devicesecret,magichue_userid,magichue_getmeshendpoint,magichue_getmeshdevicesendpoint,magichue_meshes
 magichue_countryservers = [{'nationName': 'Australian', 'nationCode': 'AU', 'serverApi': 'oameshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'oa.meshbroker.magichue.net'}, {'nationName': 'Avalon', 'nationCode': 'AL', 'serverApi': 'ttmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'tt.meshbroker.magichue.net'}, {'nationName': 'China', 'nationCode': 'CN', 'serverApi': 'cnmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'cn.meshbroker.magichue.net'}, {'nationName': 'England', 'nationCode': 'GB', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Espana', 'nationCode': 'ES', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'France', 'nationCode': 'FR', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Germany', 'nationCode': 'DE', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Italy', 'nationCode': 'IT', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Japan', 'nationCode': 'JP', 'serverApi': 'dymeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'dy.meshbroker.magichue.net'}, {'nationName': 'Russia', 'nationCode': 'RU', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}]
@@ -481,24 +480,24 @@ class ZenggeLight:
             await self.mesh.connect()
     async def light_on(self):
         await self.check_mesh_connection()
-        packetData = bytes([self.deviceType,stateAction_Power,1])
-        await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
+        packetData = bytes([self.deviceType,STATEACTION_POWER,1])
+        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.meshAddress)
         self.state = 1
     async def light_off(self):
         self.check_mesh_connection()
-        packetData = bytes([self.deviceType,stateAction_Power,0])
-        await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
+        packetData = bytes([self.deviceType,STATEACTION_POWER,0])
+        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.meshAddress)
         self.state = 0
     async def light_toggle(self):
         self.check_mesh_connection()
-        packetData = bytes([self.deviceType,stateAction_Power,self.state^1])
-        await self.mesh.send_packet(opcode_SetState,packetData,self.meshAddress)
+        packetData = bytes([self.deviceType,STATEACTION_POWER,self.state^1])
+        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.meshAddress)
         self.state = self.state^1
     #Brightness value accepts 0-100 (0 is off) *required*
     #Dimming target specifies dimming of RGB LEDs vs White LEDs
     #Delay is in 100ms units *Default is 0-No delay* (Max value is 65535
     #Gradient is in 100ms units *Default is 0-No gradient*
-    async def light_brightness(self, value,dimmingTarget=dimmingTarget_RGBWC,delay=0,gradient=0):
+    async def light_brightness(self, value=1,dimmingTarget=DIMMINGTARGET_RGBWC,delay=0,gradient=0):
         self.check_mesh_connection()
         delay0 = format(delay,'b').zfill(16)
         delayLB = int(delay0[8:16],2)
@@ -506,8 +505,8 @@ class ZenggeLight:
         gradient0 = format(gradient,'b').zfill(16)
         gradientLB = int(gradient0[8:16],2)
         gradientHB = int(gradient0[0:8],2)
-        packetData = bytes([self.deviceType,stateAction_Brightness,value,dimmingTarget,delayLB,delayHB,gradientLB,gradientHB])
-        await self.mesh.send_packet(opcode_SetBrightness,packetData,self.meshAddress)
+        packetData = bytes([self.deviceType,STATEACTION_BRIGHTNESS,value,dimmingTarget,delayLB,delayHB,gradientLB,gradientHB])
+        await self.mesh.send_packet(OPCODE_SETBRIGHTNESS,packetData,self.meshAddress)
         self.brightness = value
     # Change mode of light (RGB, Warm, CCT/Lum, AuxLight, ColorTemp/Lum/AuxLight)
     #   0x60 is the mode for static RGB (Value1,Value2,Value3 stand for RGB values 0-255)
@@ -517,22 +516,22 @@ class ZenggeLight:
     #   0x64 stands for color temp value + aux light (Value1 represents CCT ratio value 1-100, Value 2 represents luminance value 0-100, Value 3 represents aux luminance value 0-100)
     async def light_RGB(self, r=0,g=0,b=0):
         self.check_mesh_connection()
-        packetData = bytes([self.deviceType,colorMode_RGB,r,g,b])
-        await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
+        packetData = bytes([self.deviceType,COLORMODE_RGB,r,g,b])
+        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
         self.r = r
         self.g = g
         self.b = b
         self.rgb = True
-    async def light_WarmWhite(self, LUM):
+    async def light_WarmWhite(self, LUM=0):
         self.check_mesh_connection()
-        packetData = bytes([self.deviceType,colorMode_WarmWhite,LUM])
-        await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
+        packetData = bytes([self.deviceType,COLORMODE_WARMWHITE,LUM])
+        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
         self.temperature = LUM
         self.rgb = False
-    async def light_CCT(self, CCT,LUM):
+    async def light_CCT(self, CCT=0,LUM=0):
         self.check_mesh_connection()
-        packetData = bytes([self.deviceType,colorMode_CCT,CCT,LUM])
-        await self.mesh.send_packet(opcode_SetColor,packetData,self.meshAddress)
+        packetData = bytes([self.deviceType,COLORMODE_CCT,CCT,LUM])
+        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
         self.temperature = CCT
         self.brightness = LUM
         self.rgb = False
