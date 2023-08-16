@@ -54,6 +54,12 @@ UUID_CONTROL = "00010203-0405-0607-0809-0a0b0c0d1912"
 UUID_NOTIFY = "00010203-0405-0607-0809-0a0b0c0d1911"
 UUID_PAIRING = "00010203-0405-0607-0809-0a0b0c0d1914"
 
+#SERVICE_DEVICE_INFORMATION(UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb"), "Device Information Service")
+#CHARACTERISTIC_FIRMWARE(UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb"), "Firmware Revision")
+#CHARACTERISTIC_MANUFACTURER(UUID.fromString("00002a29-0000-1000-8000-00805f9b34fb"), "Manufacturer Name")
+#CHARACTERISTIC_MODEL(UUID.fromString("00002a24-0000-1000-8000-00805f9b34fb"), "Model Number")
+#CHARACTERISTIC_HARDWARE(UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb"), "Hardware Revision")
+
 global magichue_countryservers,magichue_usertoken,magichue_devicesecret,magichue_userid,magichue_getmeshendpoint,magichue_getmeshdevicesendpoint,magichue_meshes
 magichue_countryservers = [{'nationName': 'Australian', 'nationCode': 'AU', 'serverApi': 'oameshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'oa.meshbroker.magichue.net'}, {'nationName': 'Avalon', 'nationCode': 'AL', 'serverApi': 'ttmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'tt.meshbroker.magichue.net'}, {'nationName': 'China', 'nationCode': 'CN', 'serverApi': 'cnmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'cn.meshbroker.magichue.net'}, {'nationName': 'England', 'nationCode': 'GB', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Espana', 'nationCode': 'ES', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'France', 'nationCode': 'FR', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Germany', 'nationCode': 'DE', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Italy', 'nationCode': 'IT', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Japan', 'nationCode': 'JP', 'serverApi': 'dymeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'dy.meshbroker.magichue.net'}, {'nationName': 'Russia', 'nationCode': 'RU', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}]
 magichue_countryserver = magichue_countryservers[10]['serverApi']
@@ -316,9 +322,9 @@ class ZenggeMesh:
             packet = [0x0c]
             packet += data[0:8]
             packet += enc_data[0:8]
-            pairReply = await self.client.write_gatt_char(UUID_Pairing, bytes(packet), True)
+            pairReply = await self.client.write_gatt_char(UUID_PAIRING, bytes(packet), True)
             await asyncio.sleep(0.3)
-            data2 = await self.client.read_gatt_char(UUID_Pairing)
+            data2 = await self.client.read_gatt_char(UUID_PAIRING)
             self.sk = generate_sk(self.meshName, self.meshPass, data[0:8], data2[1:9])
     '''
     async def mesh_login(self):
@@ -326,9 +332,9 @@ class ZenggeMesh:
             return
         session_random = urandom(8)
         message = pckt.make_pair_packet(self.meshName.encode(), self.meshPass.encode(), session_random)
-        pairReply = await self.client.write_gatt_char(UUID_Pairing, bytes(message), True)
+        pairReply = await self.client.write_gatt_char(UUID_PAIRING, bytes(message), True)
         await asyncio.sleep(0.3)
-        reply = await self.client.read_gatt_char(UUID_Pairing)
+        reply = await self.client.read_gatt_char(UUID_PAIRING)
         self.sk = pckt.make_session_key(self.meshName.encode(), self.meshPass.encode(), session_random, reply[1:9])
 
     '''
@@ -357,7 +363,7 @@ class ZenggeMesh:
                 if time.time() - initial >= 10:
                     raise Exception("Unable to connect")
                 try:
-                    await self.client.write_gatt_char(UUID_Control, bytes(enc_packet))
+                    await self.client.write_gatt_char(UUID_CONTROL, bytes(enc_packet))
                     break
                 except:
                     self.connect()
@@ -376,7 +382,7 @@ class ZenggeMesh:
         packet = pckt.make_command_packet(self.sk, self.mac, dest, command, data)
         try:
             print(f'[{self.meshName}][{self.mac}] Writing command {command} data {repr(data)}')
-            await self.client.write_gatt_char(UUID_Control, packet)
+            await self.client.write_gatt_char(UUID_CONTROL, packet)
             return True
         except Exception as err:
             print(f'[{self.meshName}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
@@ -430,15 +436,15 @@ class ZenggeMesh:
             connect()
         message = pckt.encrypt(self.sk, new_mesh_name.encode())
         message.insert(0, 0x4)
-        await self.client.write_gatt_char(UUID_Pairing, message)
+        await self.client.write_gatt_char(UUID_PAIRING, message)
         message = pckt.encrypt(self.sk, new_mesh_password.encode())
         message.insert(0, 0x5)
-        await self.client.write_gatt_char(UUID_Pairing, message)
+        await self.client.write_gatt_char(UUID_PAIRING, message)
         message = pckt.encrypt(self.sk, new_mesh_long_term_key.encode())
         message.insert(0, 0x6)
-        await self.client.write_gatt_char(UUID_Pairing, message)
+        await self.client.write_gatt_char(UUID_PAIRING, message)
         asyncio.sleep(1)
-        reply = bytearray(await self.client.read_gatt_char(UUID_Pairing))
+        reply = bytearray(await self.client.read_gatt_char(UUID_PAIRING))
         if reply[0] == 0x7:
             self.meshName = new_mesh_name
             self.meshPass = new_mesh_password
