@@ -49,7 +49,7 @@ DIMMINGTARGET_RGBOWC = 0x04 #Set RGB, WC Off
 DIMMINGTARGET_WCORGB = 0x05 #Set WC, RGB Off
 DIMMINGTARGET_AUTO = 0x06   #Set lights according to situation
 
-UUID_SERVICE = "00010203-0405-0607-0809-0a0b0c0d1910"
+UUID_SERVICE_CONTROL = "00010203-0405-0607-0809-0a0b0c0d1910"
 UUID_CONTROL = "00010203-0405-0607-0809-0a0b0c0d1912"
 UUID_NOTIFY = "00010203-0405-0607-0809-0a0b0c0d1911"
 UUID_PAIRING = "00010203-0405-0607-0809-0a0b0c0d1914"
@@ -417,7 +417,7 @@ class ZenggeMesh:
                 raise Exception(f"Mesh login failed!")
             else:
                 print("Mesh login success!")
-            await self.client.start_notify(UUID_NOTIFY,notification_handler) #This will be modified later once Bleak implements a fix for start_notify issue.
+            #await self.client.start_notify(UUID_NOTIFY,notification_handler) #This will be modified later once Bleak implements a fix for start_notify issue.
             self.is_connected = True
         except Exception as e:
             print(f"Connection to {self.mac} failed!\nError: {e}")
