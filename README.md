@@ -54,17 +54,10 @@ async def execute():
     await mesh.connect()
     await device.light_on()
     await device.light_RGB(255,0,0)
-    asyncio.sleep(3)
+    await asyncio.sleep(3)
     await device.light_off()
+    await asyncio.sleep(10) #Test notifications here
     await mesh.disconnect()
 
 asyncio.run(execute())
 ```
-
-Current issues
----------------
-One main issue with the Bleak library is the inability to subscribe to notifications on a GATT server that has been misconfigured (Does not follow BLE RFC specs).
-Unfortunately, the Zengge floodlight that I have been testing with does not follow RFC spec so notifications are broken in my code.
-
-The only real problem I found with this was the inability to retrieve real-time status updates from the device.
-You can still send command packets and *assume* they are received and processed.
