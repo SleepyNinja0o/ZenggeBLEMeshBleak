@@ -132,7 +132,7 @@ def notification_handler(sender, data):
     Simple notification handler which prints the data received.
     This will be modified later once Bleak implements a fix for start_notify issue.
     """
-    print("{0}: {1}".format(sender, data2))
+    print("{0}: {1}".format(sender, data))
 
 
 def GenerateTimestampCheckCode():
