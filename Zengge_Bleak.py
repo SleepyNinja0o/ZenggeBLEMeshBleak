@@ -340,13 +340,9 @@ class ZenggeMesh:
         print("{0}: {1}".format(sender, data))
     async def enableNotify(self):
         await self.check_mesh_connection()
-        await self.client.write_gatt_char(UUID_NOTIFY,bytes([1]))
-        print("Enable notify packet sent...")
-        await self.send_packet(0x01,bytes([]),self.meshID)
+        await self.send_packet(0x01,bytes([]),self.meshID,uuid=UUID_NOTIFY)
         print("Enable notify packet sent2...")
-        async def callback(x,y):
-            await self.notification_handler(self,x,y)
-        await self.client.start_notify(UUID_NOTIFY, callback)
+        await self.client.start_notify(UUID_NOTIFY, self.notification_handler)
     async def mesh_login(self):
         if self.client == None:
             return
@@ -427,8 +423,9 @@ class ZenggeMesh:
             else:
                 print("Mesh login success!")
             self.is_connected = True
-            #await self.enableNotify() #This will be modified later once Bleak implements a fix for start_notify issue.
-            #print("Notify enabled successfully!")
+            await self.enableNotify() #This will be modified later once Bleak implements a fix for start_notify issue.
+            print("Notify enabled successfully!")
+            await asyncio.sleep(10) #TEST NOTIFICATIONS FUNCTON FOR 10 SECONDS BEFORE LOOP CLOSES
         except Exception as e:
             print(f"Connection to {self.mac} failed!\nError: {e}")
             self.is_connected = False
