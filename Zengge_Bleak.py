@@ -338,7 +338,7 @@ class ZenggeMesh:
         This will be modified later once Bleak implements a fix for start_notify issue.
         """
         print("{0}: {1}".format(sender, data))
-    async def enableNotify(self):
+    async def enableNotify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
         await self.check_mesh_connection()
         await self.send_packet(0x01,bytes([]),self.meshID,uuid=UUID_NOTIFY)
         print("Enable notify packet sent2...")
