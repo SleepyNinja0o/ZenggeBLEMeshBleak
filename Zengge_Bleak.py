@@ -74,60 +74,6 @@ magichue_usertoken = None
 magichue_devicesecret = None
 magichue_userid = None
 
-'''
-###REMOVE AFTER TESTING###
-These are some old fuctions I used before discovering packetutils tool from home-assistant-awox project
-
-def encrypt(key, data):
-    k = AES.new(bytes(reversed(key)), AES.MODE_ECB)
-    data = reversed(list(k.encrypt(bytes(reversed(data)))))
-    rev = []
-    for d in data:
-        rev.append(d)
-    return rev
-
-
-def generate_sk(name, password, data1, data2):
-    name = name.ljust(16, chr(0))
-    password = password.ljust(16, chr(0))
-    key = [ord(a) ^ ord(b) for a, b in zip(name, password)]
-    data = data1[0:8]
-    data += data2[0:8]
-    return encrypt(key, data)
-
-
-def key_encrypt(name, password, key):
-    name = name.ljust(16, chr(0))
-    password = password.ljust(16, chr(0))
-    data = [ord(a) ^ ord(b) for a, b in zip(name, password)]
-    return encrypt(key, data)
-
-
-def encrypt_packet(sk, address, packet):
-    auth_nonce = [address[0], address[1], address[2], address[3], 0x01, packet[0], packet[1], packet[2], 15, 0, 0, 0, 0, 0, 0, 0]
-    authenticator = encrypt(sk, auth_nonce)
-    for i in range(15):
-      authenticator[i] = authenticator[i] ^ packet[i+5]
-    mac = encrypt(sk, authenticator)
-    for i in range(2):
-       packet[i+3] = mac[i]
-    iv = [0, address[0], address[1], address[2], address[3], 0x01, packet[0],
-          packet[1], packet[2], 0, 0, 0, 0, 0, 0, 0]
-    temp_buffer = encrypt(sk, iv)
-    for i in range(15):
-        packet[i+5] ^= temp_buffer[i]
-    return packet
-
-
-def decrypt_packet(sk, address, packet):
-    iv = [address[0], address[1], address[2], packet[0], packet[1], packet[2], packet[3], packet[4], 0, 0, 0, 0, 0, 0, 0, 0] 
-    plaintext = [0] + iv[0:15]
-    result = encrypt(sk, plaintext)
-    for i in range(len(packet)-7):
-      packet[i+7] ^= result[i]
-    return packet
-'''
-
 
 def convert_value_to_available_range(value, min_from, max_from, min_to, max_to) -> int:
     normalized = (value - min_from) / (max_from - min_from)
@@ -364,10 +310,7 @@ def MagicHue_ListMeshDevices():
 
 class ZenggeMesh:
     def __init__(self, mac, meshID, meshName="ZenggeMesh", meshPass="ZenggeTechnology", meshLTK=None):
-        #self.packet_count = random.randrange(0xffff) ###REMOVE AFTER TESTING###
         self.mac = mac
-        #self.macarray = mac.split(':') ###REMOVE AFTER TESTING###
-        #self.macdata = [int(self.macarray[5], 16), int(self.macarray[4], 16), int(self.macarray[3], 16), int(self.macarray[2], 16), int(self.macarray[1], 16), int(self.macarray[0], 16)] ###REMOVE AFTER TESTING###
         self.meshID = meshID
         self.meshName = meshName
         self.meshPass = meshPass
@@ -376,24 +319,6 @@ class ZenggeMesh:
         self.sk = None
         self.devices = []
         self.is_connected = False
-    '''
-    ###REMOVE AFTER TESTING###
-        async def mesh_login_OLD(self):
-            if self.client == None:
-                return
-            data = [0] * 16
-            random_data = get_random_bytes(8)
-            for i in range(8):
-                data[i] = random_data[i]
-            enc_data = key_encrypt(self.meshName, self.meshPass, data)
-            packet = [0x0c]
-            packet += data[0:8]
-            packet += enc_data[0:8]
-            pairReply = await self.client.write_gatt_char(UUID_PAIRING, bytes(packet), True)
-            await asyncio.sleep(0.3)
-            data2 = await self.client.read_gatt_char(UUID_PAIRING)
-            self.sk = generate_sk(self.meshName, self.meshPass, data[0:8], data2[1:9])
-    '''
     async def check_mesh_connection(self):
         if self.is_connected is False:
             print("Mesh is not connected! Connecting...")
@@ -418,37 +343,6 @@ class ZenggeMesh:
         await asyncio.sleep(0.3)
         reply = await self.client.read_gatt_char(UUID_PAIRING)
         self.sk = pckt.make_session_key(self.meshName.encode(), self.meshPass.encode(), session_random, reply[1:9])
-    '''
-    ###REMOVE AFTER TESTING###
-        async def send_packet_OLD(self, target, command, data):
-            packet = [0] * 20
-            packet[0] = self.packet_count & 0xff
-            packet[1] = self.packet_count >> 8 & 0xff
-            packet[5] = target & 0xff
-            packet[6] = (target >> 8) & 0xff
-            packet[7] = command
-            packet[8] = self.meshID & 0xff
-            packet[9] = (self.meshID >> 8) & 0xff
-            for i in range(len(data)):
-                packet[10 + i] = data[i]
-            enc_packet = encrypt_packet(self.sk, self.macdata, packet)
-            bytes(enc_packet)
-            print(bytes(enc_packet))
-            self.packet_count += 1
-            if self.packet_count > 65535:
-                self.packet_count = 1
-            # BLE connections may not be stable. Spend up to 10 seconds trying to
-            # reconnect before giving up.
-            initial = time.time()
-            while True:
-                if time.time() - initial >= 10:
-                    raise Exception("Unable to connect")
-                try:
-                    await self.client.write_gatt_char(UUID_CONTROL, bytes(enc_packet))
-                    break
-                except:
-                    self.connect()
-    '''
     async def send_packet(self, command, data, dest=None, withResponse=True, attempt=0, uuid=UUID_CONTROL):
         """
         Args:
