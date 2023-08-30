@@ -127,13 +127,6 @@ def decrypt_packet(sk, address, packet):
     return packet
 '''
 
-def notification_handler(sender, data):
-    """
-    Simple notification handler which prints the data received.
-    This will be modified later once Bleak implements a fix for start_notify issue.
-    """
-    print("{0}: {1}".format(sender, data))
-
 
 def GenerateTimestampCheckCode():
     SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
@@ -317,6 +310,22 @@ class ZenggeMesh:
         self.sk = None
         self.devices = []
         self.is_connected = False
+    async def check_mesh_connection(self):
+        if self.is_connected is False:
+            print("Mesh is not connected! Connecting...")
+            await self.mesh.connect()
+    async def notification_handler(self, sender, data):
+        """
+        Simple notification handler which prints the data received.
+        This will be modified later once Bleak implements a fix for start_notify issue.
+        """
+        print("{0}: {1}".format(sender, data))
+    async def enableNotify(self):
+        await self.check_mesh_connection()
+        await self.mesh.send_packet(0x01,bytes([]),self.meshAddress)
+        async def callback(x,y):
+            await self.notification_handler(self,x,y)
+        await self.mesh.client.start_notify(UUID_NOTIFY, callback)
     '''
     ###REMOVE AFTER TESTING###
         async def mesh_login_OLD(self):
@@ -416,7 +425,7 @@ class ZenggeMesh:
                 raise Exception(f"Mesh login failed!")
             else:
                 print("Mesh login success!")
-            #await self.client.start_notify(UUID_NOTIFY,notification_handler) #This will be modified later once Bleak implements a fix for start_notify issue.
+            await self.enableNotify() #This will be modified later once Bleak implements a fix for start_notify issue.
             self.is_connected = True
         except Exception as e:
             print(f"Connection to {self.mac} failed!\nError: {e}")
@@ -445,7 +454,7 @@ class ZenggeMesh:
         if self.sk is None:
             print("BLE device is not connected!")
             self.mac = input('Please enter MAC of device:')
-            connect()
+            self.connect()
         message = pckt.encrypt(self.sk, new_mesh_name.encode())
         message.insert(0, 0x4)
         await self.client.write_gatt_char(UUID_PAIRING, message)
