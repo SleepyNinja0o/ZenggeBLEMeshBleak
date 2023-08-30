@@ -310,22 +310,6 @@ class ZenggeMesh:
         self.sk = None
         self.devices = []
         self.is_connected = False
-    async def check_mesh_connection(self):
-        if self.is_connected is False:
-            print("Mesh is not connected! Connecting...")
-            await self.mesh.connect()
-    async def notification_handler(self, sender, data):
-        """
-        Simple notification handler which prints the data received.
-        This will be modified later once Bleak implements a fix for start_notify issue.
-        """
-        print("{0}: {1}".format(sender, data))
-    async def enableNotify(self):
-        await self.check_mesh_connection()
-        await self.mesh.send_packet(0x01,bytes([]),self.meshAddress)
-        async def callback(x,y):
-            await self.notification_handler(self,x,y)
-        await self.mesh.client.start_notify(UUID_NOTIFY, callback)
     '''
     ###REMOVE AFTER TESTING###
         async def mesh_login_OLD(self):
@@ -344,6 +328,25 @@ class ZenggeMesh:
             data2 = await self.client.read_gatt_char(UUID_PAIRING)
             self.sk = generate_sk(self.meshName, self.meshPass, data[0:8], data2[1:9])
     '''
+    async def check_mesh_connection(self):
+        if self.is_connected is False:
+            print("Mesh is not connected! Connecting...")
+            await self.connect()
+    async def notification_handler(self, sender, data):
+        """
+        Simple notification handler which prints the data received.
+        This will be modified later once Bleak implements a fix for start_notify issue.
+        """
+        print("{0}: {1}".format(sender, data))
+    async def enableNotify(self):
+        await self.check_mesh_connection()
+        await self.client.write_gatt_char(UUID_NOTIFY,bytes([1]))
+        print("Enable notify packet sent...")
+        await self.send_packet(0x01,bytes([]),self.meshID)
+        print("Enable notify packet sent2...")
+        async def callback(x,y):
+            await self.notification_handler(self,x,y)
+        await self.client.start_notify(UUID_NOTIFY, callback)
     async def mesh_login(self):
         if self.client == None:
             return
@@ -353,7 +356,6 @@ class ZenggeMesh:
         await asyncio.sleep(0.3)
         reply = await self.client.read_gatt_char(UUID_PAIRING)
         self.sk = pckt.make_session_key(self.meshName.encode(), self.meshPass.encode(), session_random, reply[1:9])
-
     '''
     ###REMOVE AFTER TESTING###
         async def send_packet_OLD(self, target, command, data):
@@ -385,8 +387,7 @@ class ZenggeMesh:
                 except:
                     self.connect()
     '''
-
-    async def send_packet(self, command, data, dest=None, withResponse=True, attempt=0):
+    async def send_packet(self, command, data, dest=None, withResponse=True, attempt=0, uuid=UUID_CONTROL):
         """
         Args:
             command: The command, as a number.
@@ -399,7 +400,7 @@ class ZenggeMesh:
         packet = pckt.make_command_packet(self.sk, self.mac, dest, command, data)
         try:
             print(f'[{self.meshName}][{self.mac}] Writing command {command} data {repr(data)}')
-            return await self.client.write_gatt_char(UUID_CONTROL, packet)
+            return await self.client.write_gatt_char(uuid, packet)
         except Exception as err:
             print(f'[{self.meshName}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
             if attempt < 2:
@@ -425,8 +426,9 @@ class ZenggeMesh:
                 raise Exception(f"Mesh login failed!")
             else:
                 print("Mesh login success!")
-            await self.enableNotify() #This will be modified later once Bleak implements a fix for start_notify issue.
             self.is_connected = True
+            #await self.enableNotify() #This will be modified later once Bleak implements a fix for start_notify issue.
+            #print("Notify enabled successfully!")
         except Exception as e:
             print(f"Connection to {self.mac} failed!\nError: {e}")
             self.is_connected = False
