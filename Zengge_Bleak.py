@@ -10,8 +10,8 @@ from cryptography.hazmat.backends import default_backend
 from django.utils.encoding import force_bytes, force_str
 from bleak import BleakClient,BleakScanner
 from bleak.exc import BleakError
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
+#from Crypto.Cipher import AES #Not Needed???
+#from Crypto.Random import get_random_bytes #Not needed???
 from os import urandom
 import base64
 import binascii
@@ -390,8 +390,7 @@ class ZenggeMesh:
         packet = pckt.make_command_packet(self.sk, self.mac, dest, command, data)
         try:
             print(f'[{self.meshName}][{self.mac}] Writing command {command} data {repr(data)}')
-            await self.client.write_gatt_char(UUID_CONTROL, packet)
-            return True
+            return await self.client.write_gatt_char(UUID_CONTROL, packet)
         except Exception as err:
             print(f'[{self.meshName}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
             if attempt < 2:
