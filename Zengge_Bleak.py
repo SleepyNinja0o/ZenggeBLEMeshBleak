@@ -492,15 +492,15 @@ class ZenggeMesh:
 
 
 class ZenggeLight:
-    def __init__(self, displayName, meshAddress, mac, deviceType, controlType, wiringType, otaFlag, placeID, mesh=None):
-        self.displayName = displayName
-        self.meshAddress = meshAddress
+    def __init__(self, display_name, mesh_address, mac, device_type, control_type, wiring_type, ota_flag, place_id, mesh=None):
+        self.display_name = display_name
+        self.mesh_address = mesh_address
         self.mac = mac
-        self.deviceType = deviceType
-        self.controlType = controlType
-        self.wiringType = wiringType
-        self.otaFlag = otaFlag
-        self.placeID = placeID
+        self.device_type = device_type
+        self.control_type = control_type
+        self.wiring_type = wiring_type
+        self.ota_flag = ota_flag
+        self.place_id = place_id
         self.mesh = mesh
         self.mesh_id = None if mesh is None else mesh.mesh_id
         self.state = 0
@@ -514,18 +514,18 @@ class ZenggeLight:
             await self.mesh.connect()
     async def light_on(self):
         await self.check_mesh_connection()
-        packetData = bytes([self.deviceType,STATEACTION_POWER,1])
-        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.meshAddress)
+        packetData = bytes([self.device_type,STATEACTION_POWER,1])
+        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.mesh_address)
         self.state = 1
     async def light_off(self):
         await self.check_mesh_connection()
-        packetData = bytes([self.deviceType,STATEACTION_POWER,0])
-        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.meshAddress)
+        packetData = bytes([self.device_type,STATEACTION_POWER,0])
+        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.mesh_address)
         self.state = 0
     async def light_toggle(self):
         await self.check_mesh_connection()
-        packetData = bytes([self.deviceType,STATEACTION_POWER,self.state^1])
-        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.meshAddress)
+        packetData = bytes([self.device_type,STATEACTION_POWER,self.state^1])
+        await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.mesh_address)
         self.state = self.state^1
     #Brightness value accepts 0-100 (0 is off) *required*
     #Dimming target specifies dimming of RGB LEDs vs White LEDs
@@ -539,8 +539,8 @@ class ZenggeLight:
         gradient0 = format(gradient,'b').zfill(16)
         gradientLB = int(gradient0[8:16],2)
         gradientHB = int(gradient0[0:8],2)
-        packetData = bytes([self.deviceType,STATEACTION_BRIGHTNESS,value,dimmingTarget,delayLB,delayHB,gradientLB,gradientHB])
-        await self.mesh.send_packet(OPCODE_SETBRIGHTNESS,packetData,self.meshAddress)
+        packetData = bytes([self.device_type,STATEACTION_BRIGHTNESS,value,dimmingTarget,delayLB,delayHB,gradientLB,gradientHB])
+        await self.mesh.send_packet(OPCODE_SETBRIGHTNESS,packetData,self.mesh_address)
         self.brightness = value
     # Change mode of light (RGB, Warm, CCT/Lum, AuxLight, ColorTemp/Lum/AuxLight)
     #   0x60 is the mode for static RGB (Value1,Value2,Value3 stand for RGB values 0-255)
@@ -550,19 +550,19 @@ class ZenggeLight:
     #   0x64 stands for color temp value + aux light (Value1 represents CCT ratio value 1-100, Value 2 represents luminance value 0-100, Value 3 represents aux luminance value 0-100)
     async def light_rgb(self, r=0,g=0,b=0):
         await self.check_mesh_connection()
-        packetData = bytes([self.deviceType,COLORMODE_RGB,r,g,b])
-        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
+        packetData = bytes([self.device_type,COLORMODE_RGB,r,g,b])
+        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
         self.rgb = r,g,b
     async def light_warmwhite(self, LUM=0):
         await self.check_mesh_connection()
-        packetData = bytes([self.deviceType,COLORMODE_WARMWHITE,LUM])
-        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
+        packetData = bytes([self.device_type,COLORMODE_WARMWHITE,LUM])
+        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
         self.temperature = LUM
         self.rgb = [0,0,0]
     async def light_cct(self, CCT=0,LUM=0):
         await self.check_mesh_connection()
-        packetData = bytes([self.deviceType,COLORMODE_CCT,CCT,LUM])
-        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
+        packetData = bytes([self.device_type,COLORMODE_CCT,CCT,LUM])
+        await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
         self.temperature = CCT
         self.brightness = LUM
         self.rgb = [0,0,0]
