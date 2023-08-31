@@ -5,7 +5,7 @@ Code for Telink packet encrpytion functions & changing Mesh Name + Password usin
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
-from django.utils.encoding import force_bytes #, force_str
+#from django.utils.encoding import force_bytes, force_str
 from bleak import BleakClient,BleakScanner
 from bleak.exc import BleakError
 from os import urandom
@@ -150,9 +150,9 @@ class ZenggeCloud:
     def _generate_timestamp_checkcode(self):
         SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
         timestamp = str(int(time.time()*1000))
-        value = force_bytes("ZG" + timestamp)
+        value = ("ZG" + timestamp).encode()
         backend = default_backend()
-        key = force_bytes(SECRET_KEY)
+        key = (SECRET_KEY).encode()
         encryptor = Cipher(algorithms.AES(key), modes.ECB(), backend).encryptor()
         padder = padding.PKCS7(algorithms.AES(key).block_size).padder()
         padded_data = padder.update(value) + padder.finalize()
