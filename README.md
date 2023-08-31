@@ -5,7 +5,6 @@ Ultimate goal is Zengee Home Assistant integration.<br/>
 
 Requirements
 ------------
-pycryptodome<br/>
 cryptography<br/>
 requests <br/>
 django<br/>
@@ -14,7 +13,7 @@ bleak<br/>
 <br/>
 Install via PowerShell using:<br/>
 ```
-("pycryptodome","cryptography","requests","django","bleak") | foreach {pip install $_}
+("cryptography","requests","django","bleak") | foreach {pip install $_}
 ```
 
 Example - Pull Mesh Information from MagicHue Server
