@@ -314,7 +314,7 @@ def magichue_listmeshdevices():
 
 
 class ZenggeMesh:
-    def __init__(self, mac, mesh_id, mesh_name="ZenggeMesh", mesh_pass="ZenggeTechnology", mesh_ltk=None):
+    def __init__(self, mac, mesh_name="ZenggeMesh", mesh_pass="ZenggeTechnology", mesh_ltk=None, mesh_id=0x0211):
         self.mac = mac
         self.mesh_id = mesh_id
         self.mesh_name = mesh_name
@@ -492,7 +492,7 @@ class ZenggeMesh:
 
 
 class ZenggeLight:
-    def __init__(self, display_name, mesh_address, mac, device_type, control_type, wiring_type, ota_flag, place_id, mesh=None):
+    def __init__(self, display_name, mesh_address, mac, device_type, control_type=None, wiring_type=None, ota_flag=None, place_id=None, mesh=None):
         self.display_name = display_name
         self.mesh_address = mesh_address
         self.mac = mac
