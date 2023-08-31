@@ -46,7 +46,7 @@ deviceMAC = "08:65:F0:05:25:65"   #(MeshDevice - macAddress)
 deviceMeshAddress = 0x05          #(MeshDevice - meshAddress)
 deviceType = 0x41                 #(MeshDevice - deviceType)
 
-mesh = zengge_bleak.ZenggeMesh(deviceMAC, meshID, meshName, meshPass, meshLTK)
+mesh = zengge_bleak.ZenggeMesh(deviceMAC, meshName, meshPass, meshLTK, meshID)
 device = zengge_bleak.ZenggeLight(deviceName,deviceMeshAddress,deviceMAC,deviceType,0,0,0,0,mesh)
 
 async def execute():
