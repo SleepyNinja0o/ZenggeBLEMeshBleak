@@ -356,14 +356,14 @@ class ZenggeMesh:
         if command == C_NOTIFICATION_RECEIVED:
             mesh_id = struct.unpack('B', data[10:11])[0] #Device ID should only be data[10:11]
             mode = struct.unpack('B', data[13:14])[0] #Mode is [13:14][0]
-            white_brightness = struct.unpack('B', data[12:13])[0] #should be [12:13][0]
-            white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [12:13][0]
-            color_brightness = white_brightness
+            color_brightness = white_brightness = struct.unpack('B', data[12:13])[0] #should be [12:13][0]
+            white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [14:15][0]
             if(mode == '63' or mode == '42'):
                 color_mode = 'rgb'
                 red, green, blue = decode_color(color) #Converts from 1 value(kelvin) to RGB
             else:
                 color_mode = 'white'
+                red, green, blue = [0,0,0]
             status = {
                 'type': 'notification',
                 'mesh_id': mesh_id,
