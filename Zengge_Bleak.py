@@ -150,7 +150,7 @@ def decode_color(color):
 	return red, green, blue
 
 
-def GenerateTimestampCheckCode():
+def generate_timestamp_checkcode():
     SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
     timestamp = str(int(time.time()*1000))
     value = force_bytes("ZG" + timestamp)
@@ -164,7 +164,7 @@ def GenerateTimestampCheckCode():
     return timestamp,checkcode
 
 
-def MagicHue_SetCountryServer(countryCode=None): #{'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}
+def magichue_setcountryserver(countryCode=None): #{'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}
     global magichue_countryservers,magichue_nationdataendpoint,magichue_connecturl
     magichue_countryserver = magichue_countryservers[10]['serverApi'] #Default to USA server for pulling country list
     magichue_connecturl = "http://" + magichue_countryserver + magichue_nationdataendpoint
@@ -211,9 +211,9 @@ def MagicHue_SetCountryServer(countryCode=None): #{'nationName': 'United States'
                 magichue_connecturl = "http://" + magichue_countryservers[10]['serverApi']
 
 
-def MagicHue_Login(username, password):
+def magichue_login(username, password):
     global magichue_usertoken,magichue_userid,magichue_devicesecret,magichue_connecturl,magichue_userloginendpoint
-    timestampcheckcode = GenerateTimestampCheckCode()
+    timestampcheckcode = generate_timestamp_checkcode()
     timestamp = timestampcheckcode[0]
     checkcode = timestampcheckcode[1]
     md5pass = hashlib.md5(password.encode()).hexdigest()
@@ -237,7 +237,7 @@ def MagicHue_Login(username, password):
         magichue_devicesecret = responseJSON['deviceSecret']
 
 
-def MagicHue_GetMeshes():
+def magichue_getmeshes():
     global magichue_connecturl,magichue_getmeshendpoint,magichue_userid,magichue_usertoken,magichue_meshes
     if magichue_usertoken is not None:
         headers = {
@@ -261,7 +261,7 @@ def MagicHue_GetMeshes():
         print("Login session not detected! Please login first using MagicHue_Login method.")
 
 
-def MagicHue_GetMeshDevices():
+def magichue_getmeshdevices():
     global magichue_connecturl,magichue_getmeshdevicesendpoint,magichue_userid,magichue_usertoken,magichue_meshes
     if magichue_usertoken is not None:
         headers = {
@@ -287,7 +287,7 @@ def MagicHue_GetMeshDevices():
         print("Login session not detected! Please login first using MagicHue_Login method.")
 
 
-def MagicHue_ListMeshes():
+def magichue_listmeshes():
     for mesh in magichue_meshes:
         print("DisplayName: "+mesh['displayName'])
         print("PlaceUniID: "+mesh['placeUniID'])
@@ -302,7 +302,7 @@ def MagicHue_ListMeshes():
         print("")
 
 
-def MagicHue_ListMeshDevices():
+def magichue_listmeshdevices():
     for mesh in magichue_meshes:
         print("Mesh DisplayName: "+mesh['displayName'])
         print("MeshKey: "+mesh['meshKey']+'\n')
@@ -553,18 +553,18 @@ class ZenggeLight:
     #   0x62 stands for color temp/luminance (Value1 represents CCT scale value 0-100, Value2 represents luminance value 0-100)
     #   0x63 stands for auxiliary light (Value1 represents aux light brightness)
     #   0x64 stands for color temp value + aux light (Value1 represents CCT ratio value 1-100, Value 2 represents luminance value 0-100, Value 3 represents aux luminance value 0-100)
-    async def light_RGB(self, r=0,g=0,b=0):
+    async def light_rgb(self, r=0,g=0,b=0):
         await self.check_mesh_connection()
         packetData = bytes([self.deviceType,COLORMODE_RGB,r,g,b])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
         self.rgb = r,g,b
-    async def light_WarmWhite(self, LUM=0):
+    async def light_warmwhite(self, LUM=0):
         await self.check_mesh_connection()
         packetData = bytes([self.deviceType,COLORMODE_WARMWHITE,LUM])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
         self.temperature = LUM
         self.rgb = [0,0,0]
-    async def light_CCT(self, CCT=0,LUM=0):
+    async def light_cct(self, CCT=0,LUM=0):
         await self.check_mesh_connection()
         packetData = bytes([self.deviceType,COLORMODE_CCT,CCT,LUM])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
