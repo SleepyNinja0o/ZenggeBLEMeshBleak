@@ -553,16 +553,16 @@ class ZenggeLight:
         packetData = bytes([self.device_type,COLORMODE_RGB,r,g,b])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
         self.rgb = r,g,b
-    async def light_warmwhite(self, LUM=0):
+    async def light_warmwhite(self, lum=0):
         await self.check_mesh_connection()
-        packetData = bytes([self.device_type,COLORMODE_WARMWHITE,LUM])
+        packetData = bytes([self.device_type,COLORMODE_WARMWHITE,lum])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
-        self.temperature = LUM
+        self.temperature = lum
         self.rgb = [0,0,0]
-    async def light_cct(self, CCT=0,LUM=0):
+    async def light_cct(self, cct=0,lum=0):
         await self.check_mesh_connection()
-        packetData = bytes([self.device_type,COLORMODE_CCT,CCT,LUM])
+        packetData = bytes([self.device_type,COLORMODE_CCT,cct,lum])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
-        self.temperature = CCT
-        self.brightness = LUM
+        self.temperature = cct
+        self.brightness = lum
         self.rgb = [0,0,0]
