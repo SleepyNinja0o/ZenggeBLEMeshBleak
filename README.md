@@ -8,43 +8,38 @@ Requirements
 cryptography<br/>
 requests <br/>
 bleak<br/>
-<br/>
-<br/>
-Install via PowerShell using:<br/>
-```
-("cryptography","requests","bleak") | foreach {pip install $_}
 ```
 
-Example - Pull Mesh Information from MagicHue Server (aka 'ZenggeCloud' in script)
+Example - Pull Mesh Information from Cloud
 ----------------------------------------
 ```
 #Supported country servers are: (Defaults to US)
   AU AL CN GB ES FR DE IT JP RU US
 
-from zengge_bleak import ZenggeCloud
-zenggeCloud = ZenggeCloud(username="usernameHere",password="passwordHere",country="US")
-zenggeCloud.magichue_listmeshes()
-zenggeCloud.magichue_listmeshdevices()
+from zengge_bleak import *
+zengge_cloud = ZenggeCloud("usernameHere","passwordHere","US")  #Login and data retrieval happens on init
+zengge_cloud.list_meshes()
+zengge_cloud.list_mesh_devices()
 ```
 
 Example - Control Lights
 ----------------------------
 ```
-import zengge_bleak
+from zengge_bleak import *
 import asyncio
 
-meshID = 0x0211                   #(MeshDevice - meshUUID)
-meshName = "q31k125n759z2fkn"     #(MeshPlace - meshKey)
-meshPass = "4rie6o2dl56fz2ui"     #(MeshPlace - meshPassword)
-meshLTK = "83dd4d4630f5h57g"      #This is not required
+meshID = 0x0211
+meshName = "q31k125n759z2fkn"
+meshPass = "4rie6o2dl56fz2ui"
+meshLTK = "83dd4d4630f5h57g"
 
-deviceName = "Light1"             #This is not required
-deviceMAC = "08:65:F0:05:25:65"   #(MeshDevice - macAddress)
-deviceMeshAddress = 0x05          #(MeshDevice - meshAddress)
-deviceType = 0x41                 #(MeshDevice - deviceType)
+deviceName = "Light1"
+deviceMAC = "08:65:F0:05:25:65"
+deviceMeshAddress = 0x05
+deviceType = 0x41
 
-mesh = zengge_bleak.ZenggeMesh(deviceMAC, meshName, meshPass, meshLTK, meshID)
-device = zengge_bleak.ZenggeLight(deviceName,deviceMeshAddress,deviceMAC,deviceType,0,0,0,0,mesh)
+mesh = ZenggeMesh(deviceMAC, meshName, meshPass, meshLTK, meshID)
+device = ZenggeLight(deviceName,deviceMeshAddress,deviceMAC,deviceType,0,0,0,0,mesh)
 
 async def execute():
     await mesh.connect()
