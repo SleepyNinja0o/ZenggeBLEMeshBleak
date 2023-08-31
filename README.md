@@ -3,26 +3,24 @@ ZenggeBLEMeshBleak
 Building a python module for controlling Zengge BLE mesh devices using Bleak as the backend.<br/>
 Ultimate goal is Zengge Home Assistant integration.<br/>
 
-Requirements
-------------
+## Requirements ##
 cryptography<br/>
 requests <br/>
 bleak<br/>
 
-Example - Pull Mesh Info from Cloud
-----------------------------------------
+## Examples ##
+### Pull Mesh Info from Cloud ###
+Supported country servers:</br>
+AU AL CN GB ES FR DE IT JP RU US
+<br/>
 ```
-#Supported country servers are: (Defaults to US)
-  AU AL CN GB ES FR DE IT JP RU US
-
 from zengge_bleak import *
 zengge_cloud = ZenggeCloud("usernameHere","passwordHere","US")  #Login and data retrieval happens on init
 zengge_cloud.list_meshes()
 zengge_cloud.list_mesh_devices()
 ```
 
-Example - Control Lights
-----------------------------
+### Control Lights ###
 ```
 from zengge_bleak import *
 import asyncio
