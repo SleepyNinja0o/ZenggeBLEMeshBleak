@@ -346,11 +346,12 @@ class ZenggeMesh:
         if message is None:
             print(f'[{self.meshName}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
             return
-        print(f'Unencrypted packet: [data: {message}]')
+        print(f'Unencrypted packet: [data: {repr(list(message))}]')
         self._parseStatusResult(message)
     def _parseStatusResult(self, data):
         command = struct.unpack('B', data[7:8])[0]
         status = {}
+        color_mode = ""
         if command == C_GET_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
             mesh_id = struct.unpack('B', data[3:4])[0]
         if command == C_NOTIFICATION_RECEIVED:
@@ -359,7 +360,7 @@ class ZenggeMesh:
             white_brightness = struct.unpack('B', data[12:13])[0] #should be [12:13][0]
             white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [12:13][0]
             color_brightness = white_brightness
-            if(mode == 63 or mode == 42):
+            if(mode == '63' or mode == '42'):
                 color_mode = 'rgb'
                 red, green, blue = decode_color(color) #Converts from 1 value(kelvin) to RGB
             status = {
