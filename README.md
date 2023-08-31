@@ -1,4 +1,4 @@
-ZengeeBLEMeshBleak
+ZenggeBLEMeshBleak
 =========================================
 Building a python module for controlling Zengee BLE mesh devices using Bleak as the backend.<br/>
 Ultimate goal is Zengee Home Assistant integration.<br/>
