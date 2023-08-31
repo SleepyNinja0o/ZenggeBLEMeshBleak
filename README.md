@@ -16,10 +16,14 @@ Install via PowerShell using:<br/>
 ("cryptography","requests","django","bleak") | foreach {pip install $_}
 ```
 
-Example - Pull Mesh Information from MagicHue Server
+Example - Pull Mesh Information from MagicHue Server (aka 'ZenggeCloud' in script)
 ----------------------------------------
 ```
-import zengge_bleak
+#Supported country servers are: (Defaults to US)
+  AU AL CN GB ES FR DE IT JP RU US
+
+from zengge_bleak import ZenggeCloud
+zenggeCloud = ZenggeCloud(username="usernameHere",password="passwordHere",country="US")
 zengge_bleak.magichue_setcountryserver("US")
 zengge_bleak.magichue_login("usernameHere", "passwordHere")
 
