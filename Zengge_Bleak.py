@@ -340,11 +340,11 @@ class ZenggeMesh:
         """
         print("{0}: {1}".format(sender, data))
         if self.sk is None:
-            print(f'[{self.mesh_name}][{self.mac}] Device is disconnected, ignoring received notification [unable to decrypt without active session]')
+            print(f'[{self.meshName}][{self.mac}] Device is disconnected, ignoring received notification [unable to decrypt without active session]')
             return
         message = pckt.decrypt_packet(self.sk, self.mac, data)
         if message is None:
-            print(f'[{self.mesh_name}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
+            print(f'[{self.meshName}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
             return
         print(f'Unencrypted packet: [data: {message}]')
         self._parseStatusResult(message)
@@ -375,11 +375,11 @@ class ZenggeMesh:
                 'color_brightness': color_brightness,
             }
         if status:
-            print(f'[{self.mesh_name.decode()}][{self.mac}] Parsed status: {status}')
+            print(f'[{self.meshName}][{self.mac}] Parsed status: {status}')
         else:
-            print(f'[{self.mesh_name.decode()}][{self.mac}] Unknown command [{command}]')
+            print(f'[{self.meshName}][{self.mac}] Unknown command [{command}]')
         if status and status['mesh_id'] == self.mesh_id:
-            print(f'[{self.mesh_name.decode()}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
+            print(f'[{self.meshName}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
             #self.state = status['state']
             #self.color_mode = status['color_mode']
             #self.white_brightness = status['white_brightness']
