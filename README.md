@@ -7,13 +7,12 @@ Requirements
 ------------
 cryptography<br/>
 requests <br/>
-django<br/>
 bleak<br/>
 <br/>
 <br/>
 Install via PowerShell using:<br/>
 ```
-("cryptography","requests","django","bleak") | foreach {pip install $_}
+("cryptography","requests","bleak") | foreach {pip install $_}
 ```
 
 Example - Pull Mesh Information from MagicHue Server (aka 'ZenggeCloud' in script)
