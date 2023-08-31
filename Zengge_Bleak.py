@@ -378,16 +378,16 @@ class ZenggeMesh:
             print(f'[{self.meshName}][{self.mac}] Parsed status: {status}')
         else:
             print(f'[{self.meshName}][{self.mac}] Unknown command [{command}]')
-        if status and status['mesh_id'] == self.mesh_id:
-            print(f'[{self.meshName}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
-            #self.state = status['state']
-            #self.color_mode = status['color_mode']
-            #self.white_brightness = status['white_brightness']
-            #self.white_temperature = status['white_temperature']
-            #self.color_brightness = status['color_brightness']
-            #self.red = status['red']
-            #self.green = status['green']
-            #self.blue = status['blue']
+        #if status and status['mesh_id'] == self.meshID:
+        #    print(f'[{self.meshName}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
+        #    self.state = status['state']
+        #    self.color_mode = status['color_mode']
+        #    self.white_brightness = status['white_brightness']
+        #    self.white_temperature = status['white_temperature']
+        #    self.color_brightness = status['color_brightness']
+        #    self.red = status['red']
+        #    self.green = status['green']
+        #    self.blue = status['blue']
         #if status and self.status_callback:
         #    self.status_callback(status)
     async def enableNotify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
