@@ -5,7 +5,10 @@ Code for Telink packet encrpytion functions & changing Mesh Name + Password usin
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
-#from django.utils.encoding import force_bytes, force_str
+'''from django.utils.encoding import force_bytes, force_str
+import base64
+import random            #Unused imports - Remove later
+import json'''
 from bleak import BleakClient,BleakScanner
 from bleak.exc import BleakError
 from os import urandom
@@ -15,9 +18,6 @@ import urllib
 import packetutils as pckt
 import requests
 import struct
-#import base64
-#import random  These 3 imports are no longer used
-#import json
 import time
 import asyncio
 import math
@@ -131,7 +131,7 @@ def decode_color(color):
 class ZenggeCloud:
     def __init__(self, username, password, country="US"):
         self._username = username
-        self._password = password
+        self._password = hashlib.md5(password.encode()).hexdigest()
         self._magichue_usertoken = None
         self._magichue_devicesecret = None
         self.magichue_userid = None
@@ -163,8 +163,7 @@ class ZenggeCloud:
         timestamp_checkcode = self._generate_timestamp_checkcode()
         timestamp = timestamp_checkcode[0]
         checkcode = timestamp_checkcode[1]
-        md5pass = hashlib.md5(self._password.encode()).hexdigest()
-        payload = dict(userID=self._username, password=md5pass, appSys='Android', timestamp=timestamp, appVer='', checkcode=checkcode)
+        payload = dict(userID=self._username, password=self._password, appSys='Android', timestamp=timestamp, appVer='', checkcode=checkcode)
         headers = {
             'User-Agent': 'HaoDeng/1.5.7(ANDROID,10,en-US)',
             'Accept-Language': 'en-US',
