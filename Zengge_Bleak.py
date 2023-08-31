@@ -314,12 +314,12 @@ def magichue_listmeshdevices():
 
 
 class ZenggeMesh:
-    def __init__(self, mac, meshID, meshName="ZenggeMesh", meshPass="ZenggeTechnology", meshLTK=None):
+    def __init__(self, mac, mesh_id, mesh_name="ZenggeMesh", mesh_pass="ZenggeTechnology", mesh_ltk=None):
         self.mac = mac
-        self.meshID = meshID
-        self.meshName = meshName
-        self.meshPass = meshPass
-        self.meshLTK = meshLTK
+        self.mesh_id = mesh_id
+        self.mesh_name = mesh_name
+        self.mesh_pass = mesh_pass
+        self.mesh_ltk = mesh_ltk
         self.client = None
         self.sk = None
         self.devices = []
@@ -335,11 +335,11 @@ class ZenggeMesh:
         """
         print("{0}: {1}".format(sender, data))
         if self.sk is None:
-            print(f'[{self.meshName}][{self.mac}] Device is disconnected, ignoring received notification [unable to decrypt without active session]')
+            print(f'[{self.mesh_name}][{self.mac}] Device is disconnected, ignoring received notification [unable to decrypt without active session]')
             return
         message = pckt.decrypt_packet(self.sk, self.mac, data)
         if message is None:
-            print(f'[{self.meshName}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
+            print(f'[{self.mesh_name}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
             return
         print(f'Unencrypted packet: [data: {repr(list(message))}]')
         self._parse_status_result(message)
@@ -369,11 +369,11 @@ class ZenggeMesh:
                 'brightness': brightness,
             }
         if status:
-            print(f'[{self.meshName}][{self.mac}] Parsed status: {status}')
+            print(f'[{self.mesh_name}][{self.mac}] Parsed status: {status}')
         else:
-            print(f'[{self.meshName}][{self.mac}] Unknown command [{command}]')
-        #if status and status['mesh_id'] == self.meshID:
-        #    print(f'[{self.meshName}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
+            print(f'[{self.mesh_name}][{self.mac}] Unknown command [{command}]')
+        #if status and status['mesh_id'] == self.mesh_id:
+        #    print(f'[{self.mesh_name}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
         #    self.state = status['state']
         #    self.color_mode = status['color_mode']
         #    self.brightness = status['brightness']
@@ -383,18 +383,18 @@ class ZenggeMesh:
         #    self.status_callback(status)
     async def enableNotify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
         await self.check_mesh_connection()
-        await self.send_packet(0x01,bytes([]),self.meshID,uuid=UUID_NOTIFY)
+        await self.send_packet(0x01,bytes([]),self.mesh_id,uuid=UUID_NOTIFY)
         print("Enable notify packet sent2...")
         await self.client.start_notify(UUID_NOTIFY, self.notification_handler)
     async def mesh_login(self):
         if self.client == None:
             return
         session_random = urandom(8)
-        message = pckt.make_pair_packet(self.meshName.encode(), self.meshPass.encode(), session_random)
+        message = pckt.make_pair_packet(self.mesh_name.encode(), self.mesh_pass.encode(), session_random)
         pairReply = await self.client.write_gatt_char(UUID_PAIRING, bytes(message), True)
         await asyncio.sleep(0.3)
         reply = await self.client.read_gatt_char(UUID_PAIRING)
-        self.sk = pckt.make_session_key(self.meshName.encode(), self.meshPass.encode(), session_random, reply[1:9])
+        self.sk = pckt.make_session_key(self.mesh_name.encode(), self.mesh_pass.encode(), session_random, reply[1:9])
     async def send_packet(self, command, data, dest=None, withResponse=True, attempt=0, uuid=UUID_CONTROL):
         """
         Args:
@@ -404,13 +404,13 @@ class ZenggeMesh:
                 mesh id will be used.
         """
         assert (self.sk)
-        if dest == None: dest = self.meshID
+        if dest == None: dest = self.mesh_id
         packet = pckt.make_command_packet(self.sk, self.mac, dest, command, data)
         try:
-            print(f'[{self.meshName}][{self.mac}] Writing command {command} data {repr(data)}')
+            print(f'[{self.mesh_name}][{self.mac}] Writing command {command} data {repr(data)}')
             return await self.client.write_gatt_char(uuid, packet)
         except Exception as err:
-            print(f'[{self.meshName}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
+            print(f'[{self.mesh_name}][{self.mac}] Command failed, attempt: {attempt} - [{type(err).__name__}] {err}')
             if attempt < 2:
                 self.connect()
                 return self.send_packet(command, data, dest, withResponse, attempt+1)
@@ -444,7 +444,7 @@ class ZenggeMesh:
             self.sk = None
             pass
         if self.client is None or self.sk is None:
-            raise Exception(f"Unable to connect to mesh {self.meshName} via {self.mac}")
+            raise Exception(f"Unable to connect to mesh {self.mesh_name} via {self.mac}")
     async def setMesh(self, new_mesh_name, new_mesh_password, new_mesh_long_term_key):
         """
         Sets or changes the mesh network settings.
@@ -477,12 +477,12 @@ class ZenggeMesh:
         asyncio.sleep(1)
         reply = bytearray(await self.client.read_gatt_char(UUID_PAIRING))
         if reply[0] == 0x7:
-            self.meshName = new_mesh_name
-            self.meshPass = new_mesh_password
-            print(f'[{self.meshName}]-[{self.meshPass}]-[{self.mac}] Mesh network settings accepted.')
+            self.mesh_name = new_mesh_name
+            self.mesh_pass = new_mesh_password
+            print(f'[{self.mesh_name}]-[{self.mesh_pass}]-[{self.mac}] Mesh network settings accepted.')
             return True
         else:
-            print(f'[{self.meshName}][{self.mac}] Mesh network settings change failed : {repr(reply)}')
+            print(f'[{self.mesh_name}][{self.mac}] Mesh network settings change failed : {repr(reply)}')
             return False
     async def disconnect(self):
         self.is_connected = False
@@ -502,7 +502,7 @@ class ZenggeLight:
         self.otaFlag = otaFlag
         self.placeID = placeID
         self.mesh = mesh
-        self.meshID = None if mesh is None else mesh.meshID
+        self.mesh_id = None if mesh is None else mesh.mesh_id
         self.state = 0
         self.brightness = 0
         self.temperature = 0
