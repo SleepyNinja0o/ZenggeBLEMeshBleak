@@ -208,9 +208,9 @@ def magichue_setcountryserver(countryCode=None): #{'nationName': 'United States'
 
 def magichue_login(username, password):
     global magichue_usertoken,magichue_userid,magichue_devicesecret,magichue_connecturl,magichue_userloginendpoint
-    timestampcheckcode = generate_timestamp_checkcode()
-    timestamp = timestampcheckcode[0]
-    checkcode = timestampcheckcode[1]
+    timestamp_checkcode = generate_timestamp_checkcode()
+    timestamp = timestamp_checkcode[0]
+    checkcode = timestamp_checkcode[1]
     md5pass = hashlib.md5(password.encode()).hexdigest()
     payload = dict(userID=username, password=md5pass, appSys='Android', timestamp=timestamp, appVer='', checkcode=checkcode)
     headers = {
@@ -226,10 +226,10 @@ def magichue_login(username, password):
         print('Login failure! - %s' % response.json()['error'])
     else:
         print('Login successful!')
-        responseJSON = response.json()['result']
-        magichue_userid = responseJSON['userId']
-        magichue_usertoken = responseJSON['auth_token']
-        magichue_devicesecret = responseJSON['deviceSecret']
+        response_json = response.json()['result']
+        magichue_userid = response_json['userId']
+        magichue_usertoken = response_json['auth_token']
+        magichue_devicesecret = response_json['deviceSecret']
 
 
 def magichue_getmeshes():
@@ -248,8 +248,8 @@ def magichue_getmeshes():
             print('Get Mesh Settings web request failed! - %s' % response.json()['error'])
         else:
             print('Mesh settings retrieved successfully!')
-            responseJSON = response.json()['result']
-            magichue_meshes = responseJSON
+            response_json = response.json()['result']
+            magichue_meshes = response_json
             for mesh in magichue_meshes:
                 mesh['devices'] = None
     else:
