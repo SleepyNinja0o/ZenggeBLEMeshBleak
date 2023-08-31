@@ -24,14 +24,8 @@ Example - Pull Mesh Information from MagicHue Server (aka 'ZenggeCloud' in scrip
 
 from zengge_bleak import ZenggeCloud
 zenggeCloud = ZenggeCloud(username="usernameHere",password="passwordHere",country="US")
-zengge_bleak.magichue_setcountryserver("US")
-zengge_bleak.magichue_login("usernameHere", "passwordHere")
-
-zengge_bleak.magichue_getmeshes()       #Saved to global variable 'magichue_meshes'
-zengge_bleak.magichue_getmeshdevices()  #Saved to 'devices' attribute under global variable 'magichue_meshes'
-
-zengge_bleak.magichue_listmeshes()
-zengge_bleak.magichue_listmeshdevices()
+zenggeCloud.magichue_listmeshes()
+zenggeCloud.magichue_listmeshdevices()
 ```
 
 Example - Control Lights
