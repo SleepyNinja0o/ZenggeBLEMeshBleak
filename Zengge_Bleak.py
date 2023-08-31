@@ -383,9 +383,8 @@ class ZenggeMesh:
         #    print(f'[{self.meshName}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
         #    self.state = status['state']
         #    self.color_mode = status['color_mode']
-        #    self.white_brightness = status['white_brightness']
+        #    self.brightness = status['brightness']
         #    self.white_temperature = status['white_temperature']
-        #    self.color_brightness = status['color_brightness']
         #    self.red = status['red']
         #    self.green = status['green']
         #    self.blue = status['blue']
