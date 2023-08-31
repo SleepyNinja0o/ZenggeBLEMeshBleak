@@ -8,7 +8,6 @@ Requirements
 cryptography<br/>
 requests <br/>
 bleak<br/>
-```
 
 Example - Pull Mesh Information from Cloud
 ----------------------------------------
