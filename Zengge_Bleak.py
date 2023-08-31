@@ -346,6 +346,7 @@ class ZenggeMesh:
         if message is None:
             print(f'[{self.mesh_name}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
             return
+        print(f'Unencrypted packet: [data: {message}]')
         self._parseStatusResult(message)
     def _parseStatusResult(self, data):
         command = struct.unpack('B', data[7:8])[0]
