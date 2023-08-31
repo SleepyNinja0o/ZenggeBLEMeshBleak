@@ -9,7 +9,7 @@ cryptography<br/>
 requests <br/>
 bleak<br/>
 
-Example - Pull Mesh Information from Cloud
+Example - Pull Mesh Info from Cloud
 ----------------------------------------
 ```
 #Supported country servers are: (Defaults to US)
