@@ -351,7 +351,6 @@ class ZenggeMesh:
     def _parseStatusResult(self, data):
         command = struct.unpack('B', data[7:8])[0]
         status = {}
-        color_mode = ""
         if command == C_GET_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
             mesh_id = struct.unpack('B', data[3:4])[0]
         if command == C_NOTIFICATION_RECEIVED:
@@ -363,6 +362,8 @@ class ZenggeMesh:
             if(mode == '63' or mode == '42'):
                 color_mode = 'rgb'
                 red, green, blue = decode_color(color) #Converts from 1 value(kelvin) to RGB
+            else:
+                color_mode = 'white'
             status = {
                 'type': 'notification',
                 'mesh_id': mesh_id,
