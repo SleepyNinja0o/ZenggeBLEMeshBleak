@@ -62,6 +62,9 @@ UUID_MANUFACTURER = "00002a29-0000-1000-8000-00805f9b34fb"
 UUID_MODEL = "00002a24-0000-1000-8000-00805f9b34fb"
 UUID_HARDWARE = "00002a27-0000-1000-8000-00805f9b34fb"
 
+ZENGGE_MAC_OUI_1 = "08:65:F0"
+ZENGGE_MAC_OUI_2 = "F8:6D:73"
+
 class ZenggeColor:
     def __new__():
         raise TypeError("This is a static class and cannot be initialized.")
