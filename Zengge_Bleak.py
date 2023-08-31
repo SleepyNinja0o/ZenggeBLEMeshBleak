@@ -445,7 +445,8 @@ class ZenggeMesh:
             self.is_connected = True
             await self.enableNotify() #This will be modified later once Bleak implements a fix for start_notify issue.
             print("Notify enabled successfully!")
-            await asyncio.sleep(10) #TEST NOTIFICATIONS FUNCTON FOR 10 SECONDS BEFORE LOOP CLOSES
+            await asyncio.sleep(30) #TEST NOTIFICATIONS FUNCTON FOR 10 SECONDS BEFORE LOOP CLOSES
+            print("moving on...")
         except Exception as e:
             print(f"Connection to {self.mac} failed!\nError: {e}")
             self.is_connected = False
