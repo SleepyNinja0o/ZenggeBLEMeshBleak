@@ -360,18 +360,16 @@ class ZenggeMesh:
             white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [14:15][0]
             if(mode == 63 or mode == 42):
                 color_mode = 'rgb'
-                red, green, blue = decode_color(color) #Converts from 1 value(kelvin) to RGB
+                rgb = decode_color(color) #Converts from 1 value(kelvin) to RGB
             else:
                 color_mode = 'white'
-                red, green, blue = [0,0,0]
+                rgb = [0,0,0]
             status = {
                 'type': 'notification',
                 'mesh_address': mesh_address,
                 'state': brightness != 0,
                 'color_mode': color_mode,
-                'red': red,
-                'green': green,
-                'blue': blue,
+                'rgb': rgb,
                 'white_temperature': white_temperature,
                 'brightness': brightness,
             }
@@ -385,9 +383,7 @@ class ZenggeMesh:
         #    self.color_mode = status['color_mode']
         #    self.brightness = status['brightness']
         #    self.white_temperature = status['white_temperature']
-        #    self.red = status['red']
-        #    self.green = status['green']
-        #    self.blue = status['blue']
+        #    self.rgb = status['rgb']
         #if status and self.status_callback:
         #    self.status_callback(status)
     async def enableNotify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
@@ -515,10 +511,7 @@ class ZenggeLight:
         self.state = 0
         self.brightness = 0
         self.temperature = 0
-        self.red = 0
-        self.green = 0
-        self.blue = 0
-        self.rgb = None
+        self.rgb = [0,0,0]
         self.is_connected = False
     async def check_mesh_connection(self):
         if self.mesh.is_connected is False:
@@ -564,20 +557,17 @@ class ZenggeLight:
         await self.check_mesh_connection()
         packetData = bytes([self.deviceType,COLORMODE_RGB,r,g,b])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
-        self.r = r
-        self.g = g
-        self.b = b
-        self.rgb = True
+        self.rgb = r,g,b
     async def light_WarmWhite(self, LUM=0):
         await self.check_mesh_connection()
         packetData = bytes([self.deviceType,COLORMODE_WARMWHITE,LUM])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
         self.temperature = LUM
-        self.rgb = False
+        self.rgb = [0,0,0]
     async def light_CCT(self, CCT=0,LUM=0):
         await self.check_mesh_connection()
         packetData = bytes([self.deviceType,COLORMODE_CCT,CCT,LUM])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.meshAddress)
         self.temperature = CCT
         self.brightness = LUM
-        self.rgb = False
+        self.rgb = [0,0,0]
