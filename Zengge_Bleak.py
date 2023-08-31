@@ -19,6 +19,7 @@ import hashlib
 import urllib
 import packetutils as pckt
 import requests
+import struct
 import json
 import random
 import time
@@ -31,6 +32,15 @@ OPCODE_SETSTATE = 0xd0
 OPCODE_SETBRIGHTNESS = 0xd0
 OPCODE_SETFLASH = 0xd2
 OPCODE_RESPONSE = 0xdc
+
+#: Request current light/device status
+C_GET_STATUS_SENT = 0xda
+
+#: Response of light/device status request
+C_GET_STATUS_RECEIVED = 0xdb
+
+#: State notification
+C_NOTIFICATION_RECEIVED = 0xdc
 
 STATEACTION_POWER = 0x01
 STATEACTION_BRIGHTNESS = 0x02
@@ -329,6 +339,56 @@ class ZenggeMesh:
         This will be modified later once Bleak implements a fix for start_notify issue.
         """
         print("{0}: {1}".format(sender, data))
+        if self.sk is None:
+            print(f'[{self.mesh_name}][{self.mac}] Device is disconnected, ignoring received notification [unable to decrypt without active session]')
+            return
+        message = pckt.decrypt_packet(self.sk, self.mac, data)
+        if message is None:
+            print(f'[{self.mesh_name}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
+            return
+        self._parseStatusResult(message)
+    def _parseStatusResult(self, data):
+        command = struct.unpack('B', data[7:8])[0]
+        status = {}
+        if command == C_GET_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
+            mesh_id = struct.unpack('B', data[3:4])[0]
+        if command == C_NOTIFICATION_RECEIVED:
+            mesh_id = struct.unpack('B', data[10:11])[0] #Device ID should only be data[10:11]
+            mode = struct.unpack('B', data[13:14])[0] #Mode is [13:14][0]
+            white_brightness = struct.unpack('B', data[12:13])[0] #should be [12:13][0]
+            white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [12:13][0]
+            color_brightness = white_brightness
+            if(mode == 63 or mode == 42):
+                color_mode = 'rgb'
+                red, green, blue = decode_color(color) #Converts from 1 value(kelvin) to RGB
+            status = {
+                'type': 'notification',
+                'mesh_id': mesh_id,
+                'state': white_brightness != 0,
+                'color_mode': color_mode,
+                'red': red,
+                'green': green,
+                'blue': blue,
+                'white_temperature': white_temperature,
+                'white_brightness': white_brightness,
+                'color_brightness': color_brightness,
+            }
+        if status:
+            print(f'[{self.mesh_name.decode()}][{self.mac}] Parsed status: {status}')
+        else:
+            print(f'[{self.mesh_name.decode()}][{self.mac}] Unknown command [{command}]')
+        if status and status['mesh_id'] == self.mesh_id:
+            print(f'[{self.mesh_name.decode()}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
+            #self.state = status['state']
+            #self.color_mode = status['color_mode']
+            #self.white_brightness = status['white_brightness']
+            #self.white_temperature = status['white_temperature']
+            #self.color_brightness = status['color_brightness']
+            #self.red = status['red']
+            #self.green = status['green']
+            #self.blue = status['blue']
+        #if status and self.status_callback:
+        #    self.status_callback(status)
     async def enableNotify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
         await self.check_mesh_connection()
         await self.send_packet(0x01,bytes([]),self.meshID,uuid=UUID_NOTIFY)
