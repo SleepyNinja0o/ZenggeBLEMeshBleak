@@ -352,9 +352,9 @@ class ZenggeMesh:
         command = struct.unpack('B', data[7:8])[0]
         status = {}
         if command == C_GET_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
-            mesh_id = struct.unpack('B', data[3:4])[0]
+            mesh_address = struct.unpack('B', data[3:4])[0]
         if command == C_NOTIFICATION_RECEIVED:
-            mesh_id = struct.unpack('B', data[10:11])[0] #Device ID should only be data[10:11]
+            mesh_address = struct.unpack('B', data[10:11])[0] #Device ID should only be data[10:11]
             mode = struct.unpack('B', data[13:14])[0] #Mode is [13:14][0]
             color_brightness = white_brightness = struct.unpack('B', data[12:13])[0] #should be [12:13][0]
             white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [14:15][0]
@@ -366,7 +366,7 @@ class ZenggeMesh:
                 red, green, blue = [0,0,0]
             status = {
                 'type': 'notification',
-                'mesh_id': mesh_id,
+                'mesh_address': mesh_address,
                 'state': white_brightness != 0,
                 'color_mode': color_mode,
                 'red': red,
