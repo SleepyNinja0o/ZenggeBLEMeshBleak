@@ -381,7 +381,7 @@ class ZenggeMesh:
         #    self.rgb = status['rgb']
         #if status and self.status_callback:
         #    self.status_callback(status)
-    async def enableNotify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
+    async def enable_notify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
         await self.check_mesh_connection()
         await self.send_packet(0x01,bytes([]),self.mesh_id,uuid=UUID_NOTIFY)
         print("Enable notify packet sent2...")
@@ -435,7 +435,7 @@ class ZenggeMesh:
             else:
                 print("Mesh login success!")
             self.is_connected = True
-            await self.enableNotify() #This will be modified later once Bleak implements a fix for start_notify issue.
+            await self.enable_notify() #This will be modified later once Bleak implements a fix for start_notify issue.
             print("Notify enabled successfully!")
         except Exception as e:
             print(f"Connection to {self.mac} failed!\nError: {e}")
