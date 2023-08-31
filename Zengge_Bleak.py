@@ -342,8 +342,8 @@ class ZenggeMesh:
             print(f'[{self.meshName}][{self.mac}] Failed to decrypt package [key: {self.sk}, data: {data}]')
             return
         print(f'Unencrypted packet: [data: {repr(list(message))}]')
-        self._parseStatusResult(message)
-    def _parseStatusResult(self, data):
+        self._parse_status_result(message)
+    def _parse_status_result(self, data):
         command = struct.unpack('B', data[7:8])[0]
         status = {}
         if command == C_GET_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
