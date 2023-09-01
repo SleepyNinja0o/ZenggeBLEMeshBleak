@@ -423,7 +423,7 @@ class ZenggeMesh:
             return False
     async def get_mesh_status(self):
         packetData = bytes([0x10])
-        await self.send_packet(OPCODE_GET_STATUS,packetData,self.mesh_id)
+        await self.send_packet(OPCODE_GET_STATUS,packetData,0xffff)
     async def disconnect(self):
         self.is_connected = False
         self.sk = None
