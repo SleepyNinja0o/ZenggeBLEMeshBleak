@@ -29,9 +29,9 @@ OPCODE_SETBRIGHTNESS = 0xd0
 OPCODE_SETFLASH = 0xd2
 OPCODE_RESPONSE = 0xdc
 
-C_GET_STATUS_SENT = 0xda        #Request current light/device status
-C_GET_STATUS_RECEIVED = 0xdb    #Response of light/device status request
-C_NOTIFICATION_RECEIVED = 0xdc  #State notification
+OPCODE_GET_STATUS = 0xda        #Request current light/device status
+OPCODE_STATUS_RECEIVED = 0xdb    #Response of light/device status request
+OPCODE_NOTIFICATION_RECEIVED = 0xdc  #State notification
 
 STATEACTION_POWER = 0x01
 STATEACTION_BRIGHTNESS = 0x02
@@ -287,9 +287,9 @@ class ZenggeMesh:
     def _parse_status_result(self, data):
         command = struct.unpack('B', data[7:8])[0]
         status = {}
-        if command == C_GET_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
+        if command == OPCODE_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
             mesh_address = struct.unpack('B', data[3:4])[0]
-        if command == C_NOTIFICATION_RECEIVED:
+        if command == OPCODE_NOTIFICATION_RECEIVED:
             mesh_address = struct.unpack('B', data[10:11])[0] #Device ID should only be data[10:11]
             mode = struct.unpack('B', data[13:14])[0] #Mode is [13:14][0]
             brightness = struct.unpack('B', data[12:13])[0] #should be [12:13][0]
@@ -358,10 +358,6 @@ class ZenggeMesh:
             else:
                 self.sk = None
                 raise err
-    async def read_gatt_char(self, char):
-        assert (self.sk)
-        reply = await self.client.read_gatt_char(char)
-        return reply
     async def connect(self):
         try:
             device = await BleakScanner.find_device_by_address(self.mac, timeout=10.0)
@@ -425,6 +421,9 @@ class ZenggeMesh:
         else:
             print(f'[{self.mesh_name}][{self.mac}] Mesh network settings change failed : {repr(reply)}')
             return False
+    async def get_mesh_status(self):
+        packetData = bytes([0x10])
+        await self.send_packet(OPCODE_GET_STATUS,packetData,self.mesh_id)
     async def disconnect(self):
         self.is_connected = False
         self.sk = None
