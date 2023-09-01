@@ -421,9 +421,9 @@ class ZenggeMesh:
         else:
             print(f'[{self.mesh_name}][{self.mac}] Mesh network settings change failed : {repr(reply)}')
             return False
-    async def get_mesh_status(self):
-        packetData = bytes([0x10])
-        await self.send_packet(OPCODE_GET_STATUS,packetData,0xffff)
+    async def get_mesh_devices_status(self):
+        packet_data = bytes([0x01])
+        await self.client.write_gatt_char(UUID_NOTIFY,packet_data)
     async def disconnect(self):
         self.is_connected = False
         self.sk = None
