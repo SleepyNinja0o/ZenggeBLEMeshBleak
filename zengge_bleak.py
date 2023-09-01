@@ -296,7 +296,7 @@ class ZenggeMesh:
             white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [14:15][0]
             if(mode == 63 or mode == 42):
                 color_mode = 'rgb'
-                rgb = ZenggeColor.decode_color(color) #Converts from 1 value(kelvin) to RGB
+                rgb = ZenggeColor.decode(color) #Converts from 1 value(kelvin) to RGB
             else:
                 color_mode = 'white'
                 rgb = [0,0,0]
