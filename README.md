@@ -36,7 +36,7 @@ deviceMeshAddress = 0x05
 deviceType = 0x41
 
 mesh = ZenggeMesh(deviceMAC, meshName, meshPass, meshLTK, meshID)
-device = ZenggeLight(deviceName,deviceMeshAddress,deviceMAC,deviceType,0,0,0,0,mesh)
+device = ZenggeLight(deviceName,deviceMAC,deviceMeshAddress,deviceType,mesh)
 
 async def execute():
     await mesh.connect()

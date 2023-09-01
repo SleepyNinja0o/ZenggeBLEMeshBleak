@@ -493,15 +493,15 @@ class ZenggeMesh:
 
 
 class ZenggeLight:
-    def __init__(self, display_name, mesh_address, mac, device_type, control_type=None, wiring_type=None, ota_flag=None, place_id=None, mesh=None):
+    def __init__(self, display_name, mac, mesh_address, device_type, mesh=None):
         self.display_name = display_name
         self.mesh_address = mesh_address
         self.mac = mac
         self.device_type = device_type
-        self.control_type = control_type
-        self.wiring_type = wiring_type
-        self.ota_flag = ota_flag
-        self.place_id = place_id
+        self.control_type = None
+        self.wiring_type = None
+        self.ota_flag = None
+        self.place_id = None
         self.mesh = mesh
         self.state = 0
         self.brightness = 0
