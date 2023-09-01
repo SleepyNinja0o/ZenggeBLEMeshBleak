@@ -5,10 +5,6 @@ Code for Telink packet encrpytion functions & changing Mesh Name + Password usin
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
-'''from django.utils.encoding import force_bytes, force_str
-import base64
-import random            #Unused imports - Remove later
-import json'''
 from bleak import BleakClient,BleakScanner
 from bleak.exc import BleakError
 from os import urandom
