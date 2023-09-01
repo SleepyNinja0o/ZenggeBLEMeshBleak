@@ -68,23 +68,28 @@ ZENGGE_MAC_OUI_2 = "F8:6D:73"
 class ZenggeColor:
     def __new__():
         raise TypeError("This is a static class and cannot be initialized.")
+    
     @staticmethod
     def _normal_round(n):
         if n - math.floor(n) < 0.5:
             return math.floor(n)
         return math.ceil(n)
+    
     @staticmethod
     def _clamp(value, min_value, max_value):
         return max(min_value, min(max_value, value))
+    
     @staticmethod
     def _saturate(value):
         return ZenggeColor._clamp(value, 0.0, 1.0)
+    
     @staticmethod
     def _hue_to_rgb(h):
         r = abs(h * 6.0 - 3.0) - 1.0
         g = 2.0 - abs(h * 6.0 - 2.0)
         b = 2.0 - abs(h * 6.0 - 4.0)
         return ZenggeColor._saturate(r), ZenggeColor._saturate(g), ZenggeColor._saturate(b)
+    
     @staticmethod
     def _hsl_to_rgb(h, s=1, l=.5):
         h = (h/360)
@@ -100,18 +105,21 @@ class ZenggeColor:
         if (b >= 250):
             b = 255
         return round(r), round(g), round(b)
+    
     @staticmethod
     def _h360_to_h255(h360):
         if h360 <= 180:
             return ZenggeColor._normal_round((h360*254)/360)
         else:
             return ZenggeColor._normal_round((h360*255)/360)
+    
     @staticmethod
     def _h255_to_h360(h255):
         if h255 <= 128:
             return ZenggeColor._normal_round((h255*360)/254)
         else:
             return ZenggeColor._normal_round((h255*360)/255)
+    
     @staticmethod
     def decode(color):
         return ZenggeColor._hsl_to_rgb(ZenggeColor._h255_to_h360(color))
@@ -131,11 +139,13 @@ class ZenggeCloud:
         if login == True:
             self.get_meshes()
             self.get_mesh_devices()
+    
     def _get_magichue_countryserver(self, country="US"):
         for item in self.magichue_countryservers:
             if(item['nationCode'] == country.upper()):
                 return ("http://" + item['serverApi'])
         return ("http://" + self._magichue_countryservers[10]['serverApi']) #Return US server if error
+    
     def _generate_timestamp_checkcode(self):
         SECRET_KEY = "0FC154F9C01DFA9656524A0EFABC994F"
         timestamp = str(int(time.time()*1000))
@@ -148,6 +158,7 @@ class ZenggeCloud:
         encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
         checkcode = binascii.hexlify(encrypted_text).decode()
         return timestamp,checkcode
+    
     def login(self):
         timestamp_checkcode = self._generate_timestamp_checkcode()
         timestamp = timestamp_checkcode[0]
@@ -173,6 +184,7 @@ class ZenggeCloud:
             self._magichue_usertoken = response_json['auth_token']
             self._magichue_devicesecret = response_json['deviceSecret']
             return True
+    
     def get_meshes(self):
         if self._magichue_usertoken is not None:
             headers = {
@@ -198,6 +210,7 @@ class ZenggeCloud:
         else:
             print("Login session not detected! Please login first using MagicHue_Login method.")
             return False
+    
     def get_mesh_devices(self):
         if self._magichue_usertoken is not None:
             headers = {
@@ -225,6 +238,7 @@ class ZenggeCloud:
         else:
             print("Login session not detected! Please login first using MagicHue_Login method.")
             return False
+    
     def list_meshes(self):
         for mesh in self.magichue_meshes:
             print("DisplayName: "+mesh['displayName'])
@@ -238,6 +252,7 @@ class ZenggeCloud:
             print("MaxMeshAddress: "+str(mesh['maxMeshAddress']))
             print("MaxGroupID: "+str(mesh['maxGroupID']))
             print("")
+    
     def list_mesh_devices(self):
         for mesh in self.magichue_meshes:
             print("Mesh DisplayName: "+mesh['displayName'])
@@ -265,10 +280,12 @@ class ZenggeMesh:
         self.sk = None
         self.devices = []
         self.is_connected = False
+    
     async def check_mesh_connection(self):
         if self.is_connected is False:
             print("Mesh is not connected! Connecting...")
             await self.connect()
+    
     async def notification_handler(self, sender, data):
         """
         Simple notification handler which prints the data received.
@@ -284,6 +301,7 @@ class ZenggeMesh:
             return
         print(f'Unencrypted packet: [data: {repr(list(message))}]')
         self._parse_status_result(message)
+    
     def _parse_status_result(self, data):
         command = struct.unpack('B', data[7:8])[0]
         status = {}
@@ -358,20 +376,13 @@ class ZenggeMesh:
                 print(f'[{self.mesh_name}][{self.mac}] Parsed status: {status}\n')
         else:
             print(f'[{self.mesh_name}][{self.mac}] Unknown command [{command}]')
-        #if status and status['mesh_id'] == self.mesh_id:
-        #    print(f'[{self.mesh_name}][{self.mac}] Update device status - mesh_id: {status["mesh_id"]}')
-        #    self.state = status['state']
-        #    self.color_mode = status['color_mode']
-        #    self.brightness = status['brightness']
-        #    self.white_temperature = status['white_temperature']
-        #    self.rgb = status['rgb']
-        #if status and self.status_callback:
-        #    self.status_callback(status)
+
     async def enable_notify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
         await self.check_mesh_connection()
         await self.send_packet(0x01,bytes([]),self.mesh_id,uuid=UUID_NOTIFY)
         print("Enable notify packet sent2...")
         await self.client.start_notify(UUID_NOTIFY, self.notification_handler)
+    
     async def mesh_login(self):
         if self.client == None:
             return
@@ -381,6 +392,7 @@ class ZenggeMesh:
         await asyncio.sleep(0.3)
         reply = await self.client.read_gatt_char(UUID_PAIRING)
         self.sk = pckt.make_session_key(self.mesh_name.encode(), self.mesh_pass.encode(), session_random, reply[1:9])
+    
     async def send_packet(self, command, data, dest=None, withResponse=True, attempt=0, uuid=UUID_CONTROL):
         """
         Args:
@@ -403,6 +415,7 @@ class ZenggeMesh:
             else:
                 self.sk = None
                 raise err
+    
     async def connect(self):
         try:
             device = await BleakScanner.find_device_by_address(self.mac, timeout=10.0)
@@ -427,6 +440,7 @@ class ZenggeMesh:
             pass
         if self.client is None or self.sk is None:
             raise Exception(f"Unable to connect to mesh {self.mesh_name} via {self.mac}")
+    
     async def setMesh(self, new_mesh_name, new_mesh_password, new_mesh_long_term_key):
         """
         Sets or changes the mesh network settings.
@@ -466,9 +480,11 @@ class ZenggeMesh:
         else:
             print(f'[{self.mesh_name}][{self.mac}] Mesh network settings change failed : {repr(reply)}')
             return False
-    async def get_mesh_devices_status(self):
+    
+    async def request_device_status(self):
         packet_data = bytes([0x01])
         await self.client.write_gatt_char(UUID_NOTIFY,packet_data)
+    
     async def disconnect(self):
         self.is_connected = False
         self.sk = None
@@ -493,30 +509,35 @@ class ZenggeLight:
         self.temperature = 0
         self.rgb = [0,0,0]
         self.is_connected = False
+    
     async def check_mesh_connection(self):
         if self.mesh.is_connected is False:
             print("Mesh is not connected! Connecting...")
             await self.mesh.connect()
+    
     async def light_on(self):
         await self.check_mesh_connection()
         packetData = bytes([self.device_type,STATEACTION_POWER,1])
         await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.mesh_address)
         self.state = 1
+    
     async def light_off(self):
         await self.check_mesh_connection()
         packetData = bytes([self.device_type,STATEACTION_POWER,0])
         await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.mesh_address)
         self.state = 0
+    
     async def light_toggle(self):
         await self.check_mesh_connection()
         packetData = bytes([self.device_type,STATEACTION_POWER,self.state^1])
         await self.mesh.send_packet(OPCODE_SETSTATE,packetData,self.mesh_address)
         self.state = self.state^1
-    #Brightness value accepts 0-100 (0 is off) *required*
-    #Dimming target specifies dimming of RGB LEDs vs White LEDs
-    #Delay is in 100ms units *Default is 0-No delay* (Max value is 65535
-    #Gradient is in 100ms units *Default is 0-No gradient*
+    
     async def light_brightness(self, value=1,dimmingTarget=DIMMINGTARGET_RGBWC,delay=0,gradient=0):
+        #Brightness value accepts 0-100 (0 is off) *required*
+        #Dimming target specifies dimming of RGB LEDs vs White LEDs
+        #Delay is in 100ms units *Default is 0-No delay* (Max value is 65535
+        #Gradient is in 100ms units *Default is 0-No gradient*
         await self.check_mesh_connection()
         delay0 = format(delay,'b').zfill(16)
         delayLB = int(delay0[8:16],2)
@@ -527,23 +548,26 @@ class ZenggeLight:
         packetData = bytes([self.device_type,STATEACTION_BRIGHTNESS,value,dimmingTarget,delayLB,delayHB,gradientLB,gradientHB])
         await self.mesh.send_packet(OPCODE_SETBRIGHTNESS,packetData,self.mesh_address)
         self.brightness = value
-    # Change mode of light (RGB, Warm, CCT/Lum, AuxLight, ColorTemp/Lum/AuxLight)
-    #   0x60 is the mode for static RGB (Value1,Value2,Value3 stand for RGB values 0-255)
-    #   0x61 stands for static warm white (Value1 represents warm white value 0-255)
-    #   0x62 stands for color temp/luminance (Value1 represents CCT scale value 0-100, Value2 represents luminance value 0-100)
-    #   0x63 stands for auxiliary light (Value1 represents aux light brightness)
-    #   0x64 stands for color temp value + aux light (Value1 represents CCT ratio value 1-100, Value 2 represents luminance value 0-100, Value 3 represents aux luminance value 0-100)
+    
     async def light_rgb(self, r=0,g=0,b=0):
+        # Change mode of light (RGB, Warm, CCT/Lum, AuxLight, ColorTemp/Lum/AuxLight)
+        #  0x60 is the mode for static RGB (Value1,Value2,Value3 stand for RGB values 0-255)
+        #  0x61 stands for static warm white (Value1 represents warm white value 0-255)
+        #  0x62 stands for color temp/luminance (Value1 represents CCT scale value 0-100, Value2 represents luminance value 0-100)
+        #  0x63 stands for auxiliary light (Value1 represents aux light brightness)
+        #  0x64 stands for color temp value + aux light (Value1 represents CCT ratio value 1-100, Value 2 represents luminance value 0-100, Value 3 represents aux luminance value 0-100)
         await self.check_mesh_connection()
         packetData = bytes([self.device_type,COLORMODE_RGB,r,g,b])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
         self.rgb = r,g,b
+    
     async def light_warmwhite(self, lum=0):
         await self.check_mesh_connection()
         packetData = bytes([self.device_type,COLORMODE_WARMWHITE,lum])
         await self.mesh.send_packet(OPCODE_SETCOLOR,packetData,self.mesh_address)
         self.temperature = lum
         self.rgb = [0,0,0]
+    
     async def light_cct(self, cct=0,lum=0):
         await self.check_mesh_connection()
         packetData = bytes([self.device_type,COLORMODE_CCT,cct,lum])
