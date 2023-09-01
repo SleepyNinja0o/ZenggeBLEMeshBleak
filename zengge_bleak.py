@@ -378,10 +378,9 @@ class ZenggeMesh:
             print(f'[{self.mesh_name}][{self.mac}] Unknown command [{command}]')
 
     async def enable_notify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
-        await self.check_mesh_connection()
         await self.send_packet(0x01,bytes([]),self.mesh_id,uuid=UUID_NOTIFY)
-        print("Enable notify packet sent2...")
         await self.client.start_notify(UUID_NOTIFY, self.notification_handler)
+        return True
     
     async def mesh_login(self):
         if self.client == None:
@@ -459,7 +458,6 @@ class ZenggeMesh:
         assert len(new_mesh_long_term_key.encode()) <= 16, "new_mesh_long_term_key can hold max 16 bytes"
         if self.sk is None:
             print("BLE device is not connected!")
-            self.mac = input('Please enter MAC of device:')
             self.connect()
         message = pckt.encrypt(self.sk, new_mesh_name.encode())
         message.insert(0, 0x4)
