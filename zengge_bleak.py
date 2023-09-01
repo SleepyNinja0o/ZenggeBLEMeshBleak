@@ -23,11 +23,11 @@ OPCODE_SETCCT = 0xf4
 OPCODE_SETSTATE = 0xd0
 OPCODE_SETBRIGHTNESS = 0xd0
 OPCODE_SETFLASH = 0xd2
-OPCODE_RESPONSE = 0xdc
 
 OPCODE_GET_STATUS = 0xda        #Request current light/device status
 OPCODE_STATUS_RECEIVED = 0xdb    #Response of light/device status request
 OPCODE_NOTIFICATION_RECEIVED = 0xdc  #State notification
+OPCODE_RESPONSE = 0xdc
 
 STATEACTION_POWER = 0x01
 STATEACTION_BRIGHTNESS = 0x02
