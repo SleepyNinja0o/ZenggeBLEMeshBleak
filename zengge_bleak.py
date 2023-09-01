@@ -503,7 +503,6 @@ class ZenggeLight:
         self.ota_flag = ota_flag
         self.place_id = place_id
         self.mesh = mesh
-        self.mesh_id = None if mesh is None else mesh.mesh_id
         self.state = 0
         self.brightness = 0
         self.temperature = 0
