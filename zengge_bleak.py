@@ -287,13 +287,14 @@ class ZenggeMesh:
     def _parse_status_result(self, data):
         command = struct.unpack('B', data[7:8])[0]
         status = {}
-        if command == OPCODE_STATUS_RECEIVED: #This does not return anything useful other than device is online/talking to mesh
+        if command == OPCODE_STATUS_RECEIVED: #This does not return any status info, only that the device is online
             mesh_address = struct.unpack('B', data[3:4])[0]
-        if command == OPCODE_NOTIFICATION_RECEIVED:
-            mesh_address = struct.unpack('B', data[10:11])[0] #Device ID should only be data[10:11]
-            mode = struct.unpack('B', data[13:14])[0] #Mode is [13:14][0]
-            brightness = struct.unpack('B', data[12:13])[0] #should be [12:13][0]
-            white_temperature = color = struct.unpack('B', data[14:15])[0] #should be [14:15][0]
+        elif command == OPCODE_NOTIFICATION_RECEIVED:
+            device_data = struct.unpack('BBBBB', data[10:15])
+            mesh_address = device_data[0]
+            mode = device_data[3]
+            brightness = device_data[2]
+            cct = color = device_data[4]
             if(mode == 63 or mode == 42):
                 color_mode = 'rgb'
                 rgb = ZenggeColor.decode(color) #Converts from 1 value(kelvin) to RGB
@@ -306,11 +307,55 @@ class ZenggeMesh:
                 'state': brightness != 0,
                 'color_mode': color_mode,
                 'rgb': rgb,
-                'white_temperature': white_temperature,
+                'white_temperature': cct,
                 'brightness': brightness,
             }
-        if status:
-            print(f'[{self.mesh_name}][{self.mac}] Parsed status: {status}')
+            print(f'[{self.mesh_name}][{self.mac}] Parsed status: {status}\n')
+        elif command == OPCODE_RESPONSE:
+            device_1_data = struct.unpack('BBBBB', data[10:15])
+            device_2_data = struct.unpack('BBBBB', data[15:20])
+            if (device_1_data[0] != 0):
+                mesh_address = device_1_data[0]
+                mode = device_1_data[3]
+                brightness = device_1_data[2]
+                cct = color = device_1_data[4]
+                if(mode == 63 or mode == 42):
+                    color_mode = 'rgb'
+                    rgb = ZenggeColor.decode(color) #Converts from 1 value(kelvin) to RGB
+                else:
+                    color_mode = 'white'
+                    rgb = [0,0,0]
+                status = {
+                    'type': 'status',
+                    'mesh_address': mesh_address,
+                    'state': brightness != 0,
+                    'color_mode': color_mode,
+                    'rgb': rgb,
+                    'white_temperature': cct,
+                    'brightness': brightness,
+                }
+                print(f'[{self.mesh_name}][{self.mac}] Parsed status: {status}\n')
+            if (device_2_data[0] != 0):
+                mesh_address = device_2_data[0]
+                mode = device_2_data[3]
+                brightness = device_2_data[2]
+                cct = color = device_2_data[4]
+                if(mode == 63 or mode == 42):
+                    color_mode = 'rgb'
+                    rgb = ZenggeColor.decode(color) #Converts from 1 value(kelvin) to RGB
+                else:
+                    color_mode = 'white'
+                    rgb = [0,0,0]
+                status = {
+                    'type': 'notification',
+                    'mesh_address': mesh_address,
+                    'state': brightness != 0,
+                    'color_mode': color_mode,
+                    'rgb': rgb,
+                    'white_temperature': cct,
+                    'brightness': brightness,
+                }
+                print(f'[{self.mesh_name}][{self.mac}] Parsed status: {status}\n')
         else:
             print(f'[{self.mesh_name}][{self.mac}] Unknown command [{command}]')
         #if status and status['mesh_id'] == self.mesh_id:
