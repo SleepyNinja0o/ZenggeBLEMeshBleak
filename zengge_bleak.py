@@ -303,7 +303,7 @@ class ZenggeMesh:
         status = {}
         if command == OPCODE_STATUS_RECEIVED: #This does not return any status info, only that the device is online
             mesh_address = struct.unpack('B', data[3:4])[0]
-        elif command == OPCODE_NOTIFICATION_RECEIVED:
+        elif command == 0x99: # THIS COMMAND NEEDS REMOVED....DOES NOT WORK
             device_data = struct.unpack('BBBBB', data[10:15])
             mesh_address = device_data[0]
             mode = device_data[3]
