@@ -230,10 +230,10 @@ class ZenggeCloud:
                     print('Mesh devices retrieved for placeUniID: ' + placeUniID)
                     responseJSON = response.json()['result']
                     mesh.update({'devices':responseJSON})
-                    return True
         else:
             print("Login session not detected! Please login first using MagicHue_Login method.")
             return False
+        return True
     
     def list_meshes(self):
         for mesh in self.magichue_meshes:
