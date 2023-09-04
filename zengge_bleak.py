@@ -416,7 +416,7 @@ class ZenggeMesh:
             device = await BleakScanner.find_device_by_address(self.mac, timeout=10.0)
             if not device:
                 raise BleakError(f"A device with address {self.mac} could not be found.")
-            self.client = BleakClient(self.mac)
+            self.client = BleakClient(device)
             await self.client.connect()
             print("Connected to device!")
             await self.mesh_login()
