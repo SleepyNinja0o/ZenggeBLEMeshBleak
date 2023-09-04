@@ -1,0 +1,8 @@
+WiringConnectionType_None(0, "NONE")
+WiringConnectionType_RGB(1, "RGB")
+WiringConnectionType_RGBW(2, "RGB / W")
+WiringConnectionType_RGB_W_Both(3, "RGB & W")
+WiringConnectionType_RGBCW(4, "RGB / CCT")
+WiringConnectionType_RGB_CW_Both(5, "RGB & CCT")
+WiringConnectionType_DIM(6, "DIM")
+WiringConnectionType_CCT(7, "CCT")
