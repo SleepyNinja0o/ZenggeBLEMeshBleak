@@ -374,6 +374,7 @@ class ZenggeMesh:
             print(f'[{self.mesh_name}][{self.mac}] Unknown command [{command}]')
 
     async def enable_notify(self): #Huge thanks to 'cocoto' for helping me figure out this issue with Zengge!!
+        await self.send_packet(0x00,bytes([]),self.mesh_id,uuid=UUID_NOTIFY)
         await self.send_packet(0x01,bytes([]),self.mesh_id,uuid=UUID_NOTIFY)
         await self.client.start_notify(UUID_NOTIFY, self.notification_handler)
         return True
