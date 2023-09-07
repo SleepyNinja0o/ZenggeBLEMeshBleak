@@ -129,12 +129,14 @@ class ZenggeCloud:
         self._magichue_devicesecret = None
         self.magichue_userid = None
         self.magichue_meshes = None
+        self.bridge_control_data = None
         self.magichue_countryservers = [{'nationName': 'Australian', 'nationCode': 'AU', 'serverApi': 'oameshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'oa.meshbroker.magichue.net'}, {'nationName': 'Avalon', 'nationCode': 'AL', 'serverApi': 'ttmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'tt.meshbroker.magichue.net'}, {'nationName': 'China', 'nationCode': 'CN', 'serverApi': 'cnmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'cn.meshbroker.magichue.net'}, {'nationName': 'England', 'nationCode': 'GB', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Espana', 'nationCode': 'ES', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'France', 'nationCode': 'FR', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Germany', 'nationCode': 'DE', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Italy', 'nationCode': 'IT', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'Japan', 'nationCode': 'JP', 'serverApi': 'dymeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'dy.meshbroker.magichue.net'}, {'nationName': 'Russia', 'nationCode': 'RU', 'serverApi': 'eumeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'eu.meshbroker.magichue.net'}, {'nationName': 'United States', 'nationCode': 'US', 'serverApi': 'usmeshcloud.magichue.net:8081/MeshClouds/', 'brokerApi': 'us.meshbroker.magichue.net'}]
         self.magichue_connecturl = self._get_magichue_countryserver() if country=="US" else self._get_magichue_countryserver(country) #Default to US server
         login = self.login()
         if login == True:
             self.get_meshes()
             self.get_mesh_devices()
+            #self.get_bridge_control_data()
     
     def _get_magichue_countryserver(self, country="US"):
         for item in self.magichue_countryservers:
@@ -204,7 +206,32 @@ class ZenggeCloud:
                     mesh['devices'] = None
                 return True
         else:
-            print("Login session not detected! Please login first using MagicHue_Login method.")
+            print("Login session not detected! Please login first using login method.")
+            return False
+
+    #Response: {"ok":true,"err_code":0,"err_msg":"","result":[{"deviceName":"2c9459fd87084f1*****************","devicePwd":"d155c1791eae4d******************","productKey":"TLdnl8aKqCL","deviceType":"SOFTWARE","macAddress":"70039F******","loadDeviceUrl":null},{"deviceName":"2c9459fd8708********************","devicePwd":"AB8C45816FB648BEC2287230664FAFB0418EE5054AFA16A8ECCEE3E0****************************************","productKey":"LCTLdnl8aKqCI","deviceType":"HARDWARE","macAddress":"70039F******","loadDeviceUrl":null}]}
+    def get_bridge_control_data(self, mesh_placeuniid):
+        if self._magichue_usertoken is not None:
+            headers = {
+                'User-Agent': 'HaoDeng/1.5.7(ANDROID,10,en-US)',
+                'Accept-Language': 'en-US',
+                'Accept': 'application/json',
+                'token': self._magichue_usertoken,
+                'Content-Type': 'application/json',
+                'Accept-Encoding': 'gzip'
+            }
+            magichue_mcd_endpoint = "apixp/Mqtt/getMasterControlData/ZG?placeUniID="
+            response = requests.get(self.magichue_connecturl + magichue_mcd_endpoint + mesh_placeuniid, headers=headers)
+            if response.status_code != 200:
+                print('WiFi bridge control data web request failed! - %s' % response.json()['error'])
+                return False
+            else:
+                print('WiFi bridge control data retrieved successfully!')
+                response_json = response.json()['result']
+                self.bridge_control_data = response_json
+                return True
+        else:
+            print("Login session not detected! Please login first using login method.")
             return False
     
     def get_mesh_devices(self):
@@ -231,7 +258,7 @@ class ZenggeCloud:
                     responseJSON = response.json()['result']
                     mesh.update({'devices':responseJSON})
         else:
-            print("Login session not detected! Please login first using MagicHue_Login method.")
+            print("Login session not detected! Please login first using login method.")
             return False
         return True
     
