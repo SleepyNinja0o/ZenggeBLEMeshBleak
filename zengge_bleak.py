@@ -7,15 +7,17 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 from bleak import BleakClient,BleakScanner
 from bleak.exc import BleakError
+import packetutils as pckt
+from hashlib import sha1
 from os import urandom
 import binascii
-import hashlib
-import urllib
-import packetutils as pckt
 import requests
-import struct
-import time
+import hashlib
 import asyncio
+import urllib
+import struct
+import hmac
+import time
 import math
 
 OPCODE_SETCOLOR = 0xe2
@@ -119,6 +121,24 @@ class ZenggeColor:
     @staticmethod
     def decode(color):
         return ZenggeColor._hsl_to_rgb(ZenggeColor._h255_to_h360(color))
+
+
+class MqttAuthInfo:
+    mqttClientId = ''
+    mqttUsername = ''
+    mqttPassword = ''
+
+    def calculate_sign_time(self, productKey, deviceName, deviceSecret, clientId, timeStamp):
+        self.mqttClientId = clientId + "|securemode=2,signmethod=hmacsha1,timestamp=" + timeStamp + "|"
+        self.mqttUsername = deviceName + "&" + productKey
+        content = "clientId" + clientId + "deviceName" + deviceName + "productKey" + productKey + "timestamp" + timeStamp
+        self.mqttPassword = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
+
+    def calculate_sign(self, productKey, deviceName, deviceSecret, clientId):
+        self.mqttClientId = clientId + "|securemode=2,signmethod=hmacsha1|"
+        self.mqttUsername = deviceName + "&" + productKey
+        content = "clientId" + clientId + "deviceName" + deviceName + "productKey" + productKey
+        self.mqttPassword = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
 
 
 class ZenggeCloud:
