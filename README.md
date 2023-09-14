@@ -7,6 +7,7 @@ Ultimate goal is Zengge Home Assistant integration.<br/>
 cryptography<br/>
 requests <br/>
 bleak<br/>
+paho-mqtt<br/>
 
 ## Examples ##
 ### Pull Mesh Info from Cloud ###
