@@ -7,7 +7,8 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 from bleak import BleakClient,BleakScanner
 from bleak.exc import BleakError
-import paho.mqtt.client as mqtt
+import aiomqtt
+#import paho.mqtt.client as mqtt
 import packetutils as pckt
 from hashlib import sha1
 from os import urandom
@@ -125,22 +126,22 @@ class ZenggeColor:
         return ZenggeColor._hsl_to_rgb(ZenggeColor._h255_to_h360(color))
 
 
-class MqttAuthInfo:
-    mqttClientId = ''
-    mqttUsername = ''
-    mqttPassword = ''
+class ZenggeMqttAuth:
+    clientId = ''
+    username = ''
+    password = ''
 
-    def calculate_sign_time(self, productKey, deviceName, deviceSecret, clientId, timeStamp):
-        self.mqttClientId = clientId + "|securemode=2,signmethod=hmacsha1,timestamp=" + timeStamp + "|"
-        self.mqttUsername = deviceName + "&" + productKey
-        content = "clientId" + clientId + "deviceName" + deviceName + "productKey" + productKey + "timestamp" + timeStamp
-        self.mqttPassword = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
+    def calculate_sign_time(self, productKey, deviceName, deviceSecret, timeStamp):
+        self.clientId = deviceName + "|securemode=2,signmethod=hmacsha1,timestamp=" + timeStamp + "|"
+        self.username = deviceName + "&" + productKey
+        content = "clientId" + deviceName + "deviceName" + deviceName + "productKey" + productKey + "timestamp" + timeStamp
+        self.password = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
 
-    def calculate_sign(self, productKey, deviceName, deviceSecret, clientId):
-        self.mqttClientId = clientId + "|securemode=2,signmethod=hmacsha1|"
-        self.mqttUsername = deviceName + "&" + productKey
-        content = "clientId" + clientId + "deviceName" + deviceName + "productKey" + productKey
-        self.mqttPassword = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
+    def calculate_sign(self, productKey, deviceName, deviceSecret):
+        self.clientId = deviceName + "|securemode=2,signmethod=hmacsha1|"
+        self.username = deviceName + "&" + productKey
+        content = "clientId" + deviceName + "deviceName" + deviceName + "productKey" + productKey
+        self.password = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
 
 
 class ZenggeCloud:
