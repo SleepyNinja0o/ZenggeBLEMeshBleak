@@ -126,13 +126,13 @@ class ZenggeColor:
         return ZenggeColor._hsl_to_rgb(ZenggeColor._h255_to_h360(color))
 
 
-class ZenggeMqttAuth:
-    def __init__(self, productKey, deviceName, deviceSecret):
-        timeStamp = str((int(round(time.time() * 1000))))
-        self.clientId = deviceName + "|securemode=2,signmethod=hmacsha1,timestamp=" + timeStamp + "|"
-        self.username = deviceName + "&" + productKey
-        content = "clientId" + deviceName + "deviceName" + deviceName + "productKey" + productKey + "timestamp" + timeStamp
-        self.password = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
+def ZenggeMqttAuth(productKey, deviceName, deviceSecret):
+    timeStamp = str((int(round(time.time() * 1000))))
+    client_id = deviceName + "|securemode=2,signmethod=hmacsha1,timestamp=" + timeStamp + "|"
+    username = deviceName + "&" + productKey
+    content = "clientId" + deviceName + "deviceName" + deviceName + "productKey" + productKey + "timestamp" + timeStamp
+    password = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
+    return {'username':username,'password':password,'client_id':client_id}
 
 
 class ZenggeCloud:
