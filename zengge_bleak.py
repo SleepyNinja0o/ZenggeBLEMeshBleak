@@ -127,20 +127,11 @@ class ZenggeColor:
 
 
 class ZenggeMqttAuth:
-    clientId = ''
-    username = ''
-    password = ''
-
-    def calculate_sign_time(self, productKey, deviceName, deviceSecret, timeStamp):
+    def __init__(self, productKey, deviceName, deviceSecret):
+        timeStamp = str((int(round(time.time() * 1000))))
         self.clientId = deviceName + "|securemode=2,signmethod=hmacsha1,timestamp=" + timeStamp + "|"
         self.username = deviceName + "&" + productKey
         content = "clientId" + deviceName + "deviceName" + deviceName + "productKey" + productKey + "timestamp" + timeStamp
-        self.password = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
-
-    def calculate_sign(self, productKey, deviceName, deviceSecret):
-        self.clientId = deviceName + "|securemode=2,signmethod=hmacsha1|"
-        self.username = deviceName + "&" + productKey
-        content = "clientId" + deviceName + "deviceName" + deviceName + "productKey" + productKey
         self.password = hmac.new(deviceSecret.encode(), content.encode(), sha1).hexdigest()
 
 
